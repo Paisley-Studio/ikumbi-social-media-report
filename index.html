@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ikumbi Tea · Board Report</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#2B2D42;--slate:#8D99AE;--mist:#EDF2F4;--red:#EF233C;--crimson:#D90429;
+ --bg-color:#EDF2F4;--text-color:#2B2D42;--card-bg:rgba(255,255,255,.93);--border-color:rgba(43,45,66,.14)}
+body{font-family:'Quicksand',sans-serif;background:var(--bg-color);color:var(--text-color);overflow:hidden;height:100vh}
+body.dark-mode{--bg-color:#1b1c2a;--text-color:#EDF2F4;--card-bg:rgba(43,45,66,.93);--border-color:rgba(141,153,174,.3)}
+body.high-contrast{--ink:#000;--crimson:#b00020;--bg-color:#fff;--text-color:#000;--card-bg:#fff}
+
+/* BOOK */
+.book{position:fixed;inset:0;perspective:2400px;perspective-origin:30% 50%;overflow:hidden;background:var(--bg-color)}
+.slide-pane{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;visibility:hidden;z-index:1;padding:2.5rem 2rem 6.5rem 5.5rem;background:var(--bg-color);color:var(--text-color);transform-origin:left center;backface-visibility:hidden;-webkit-backface-visibility:hidden;scrollbar-width:thin;scrollbar-color:rgba(43,45,66,.3) transparent}
+.slide-pane.active-slide{visibility:visible;z-index:3}
+.slide-pane.under{visibility:visible;z-index:2}
+.slide-pane.turning{visibility:visible;z-index:6;box-shadow:-30px 0 60px rgba(29,31,48,.35)}
+.slide-pane.turn-out{animation:turnOut .95s cubic-bezier(.55,.05,.35,1) forwards}
+.slide-pane.turn-in{animation:turnIn .95s cubic-bezier(.55,.05,.35,1) forwards}
+@keyframes turnOut{0%{transform:rotateY(0);filter:brightness(1)}35%{transform:rotateY(-28deg) skewY(-.8deg);filter:brightness(.97)}100%{transform:rotateY(-104deg);filter:brightness(.7)}}
+@keyframes turnIn{0%{transform:rotateY(-104deg);filter:brightness(.7)}65%{transform:rotateY(-28deg) skewY(-.8deg);filter:brightness(.97)}100%{transform:rotateY(0);filter:brightness(1)}}
+.turn-shade{position:fixed;inset:0;z-index:4;pointer-events:none;opacity:0;background:linear-gradient(90deg,rgba(29,31,48,.45),rgba(29,31,48,.12) 45%,rgba(29,31,48,0) 80%)}
+.turn-shade.on{animation:shadeFade .95s ease-out forwards}
+@keyframes shadeFade{0%{opacity:1}100%{opacity:0}}
+.spine{position:fixed;top:0;bottom:0;left:0;width:22px;z-index:7;pointer-events:none;background:linear-gradient(90deg,rgba(29,31,48,.22),rgba(29,31,48,0))}
+.page-edge{position:fixed;top:14px;bottom:14px;right:0;width:7px;z-index:7;pointer-events:none;background:repeating-linear-gradient(90deg,#fff 0 1px,#d6dde3 1px 2px);border-radius:3px 0 0 3px}
+@media (prefers-reduced-motion:reduce){.slide-pane.turn-out,.slide-pane.turn-in,.turn-shade.on{animation:none}}
+
+/* WHEEL NAV */
+.wheel-nav{position:fixed;top:50%;left:1.2rem;transform:translateY(-50%);z-index:1050;display:flex;flex-direction:column;align-items:center;gap:.35rem;background:rgba(255,255,255,.92);backdrop-filter:blur(14px);padding:.8rem .4rem;border-radius:60px;box-shadow:0 12px 35px rgba(43,45,66,.22);border:1px solid var(--border-color);min-width:48px;max-height:90vh;overflow-y:auto;scrollbar-width:none}
+.wheel-nav::-webkit-scrollbar{display:none}
+.wheel-nav .nav-item{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--ink);color:var(--ink);font-size:.95rem;transition:background .25s,color .25s,transform .2s;cursor:pointer;background:#fff;flex-shrink:0}
+.wheel-nav .nav-item:hover{background:var(--ink);color:#fff;transform:scale(1.12)}
+.wheel-nav .nav-item.active{background:var(--crimson);color:#fff;border-color:var(--crimson);box-shadow:0 0 0 3px rgba(239,35,60,.25)}
+.nav-tip{position:fixed;left:84px;z-index:1100;background:var(--ink);color:#fff;padding:.35rem .75rem;border-radius:8px;font-size:.75rem;font-weight:600;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s}
+.nav-tip.show{opacity:1}
+
+/* SECTION MENU */
+.menu-btn{position:fixed;top:18px;right:22px;z-index:1060;display:inline-flex;align-items:center;gap:.5rem;background:var(--ink);color:#fff;border:none;border-radius:50px;padding:.6rem 1.15rem;font:700 .85rem 'Quicksand',sans-serif;box-shadow:0 8px 22px rgba(43,45,66,.3);cursor:pointer;transition:background .2s}
+.menu-btn:hover{background:var(--crimson)}
+.drawer-scrim{position:fixed;inset:0;background:rgba(29,31,48,.45);z-index:1090;opacity:0;pointer-events:none;transition:opacity .3s}
+.drawer-scrim.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(400px,92vw);background:#fff;z-index:1100;transform:translateX(105%);transition:transform .4s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;box-shadow:-18px 0 45px rgba(29,31,48,.3);border-left:5px solid var(--crimson);color:#2B2D42}
+.drawer.open{transform:none}
+.drawer-head{padding:1.2rem 1.4rem .8rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(43,45,66,.14)}
+.drawer-head h6{margin:0;font-weight:700;font-size:1.1rem}
+.drawer-close{width:36px;height:36px;border-radius:50%;border:1px solid rgba(43,45,66,.14);background:var(--mist);color:var(--ink)}
+.drawer-search{margin:.8rem 1.4rem .3rem;padding:.55rem .9rem;border-radius:12px;border:1px solid rgba(43,45,66,.14);font:500 .88rem 'Quicksand',sans-serif;background:var(--mist)}
+.drawer-list{flex:1;overflow-y:auto;padding:.4rem .9rem 1.5rem}
+.dr-ch>button{width:100%;text-align:left;border:none;background:transparent;padding:.6rem .7rem;border-radius:12px;display:flex;gap:.7rem;align-items:center;font:700 .9rem 'Quicksand',sans-serif;color:var(--ink)}
+.dr-ch>button i{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;border:1.5px solid var(--ink);font-size:.8rem;flex:none}
+.dr-ch>button:hover{background:var(--mist)}
+.dr-ch.active>button{background:var(--ink);color:#fff}.dr-ch.active>button i{border-color:var(--red);background:var(--red);color:#fff}
+.dr-subs{padding:.1rem 0 .4rem 3rem}
+.dr-subs button{display:block;width:100%;text-align:left;border:none;background:transparent;padding:.32rem .6rem;font:600 .8rem 'Quicksand',sans-serif;color:#5b6177;border-left:2px solid rgba(43,45,66,.14)}
+.dr-subs button:hover{color:var(--crimson);border-left-color:var(--crimson);background:rgba(239,35,60,.05)}
+.drawer-foot{font-size:.72rem;color:#6b7187;padding:.7rem 1.4rem;border-top:1px solid rgba(43,45,66,.14)}
+
+/* PAGER */
+.pager{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:1055;display:flex;align-items:center;gap:.6rem;background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border:1px solid rgba(43,45,66,.14);border-radius:60px;padding:.4rem;box-shadow:0 12px 30px rgba(43,45,66,.22)}
+.pager button{border:none;border-radius:50px;height:42px;display:inline-flex;align-items:center;gap:.4rem;font:700 .82rem 'Quicksand',sans-serif;cursor:pointer;transition:background .2s,color .2s}
+.pager .pg-prev{width:42px;justify-content:center;background:var(--mist);color:var(--ink)}
+.pager .pg-prev:hover{background:var(--ink);color:#fff}
+.pager .pg-next{padding:0 1.1rem;background:var(--crimson);color:#fff}
+.pager .pg-next:hover{background:var(--red)}
+.pager button:disabled{opacity:.35;cursor:default}
+.pg-info{min-width:200px;text-align:center;font-size:.78rem;font-weight:600;color:#2B2D42;line-height:1.25}
+.pg-info b{color:var(--crimson)}
+.pg-info .pg-title{display:block;font-size:.7rem;color:#6b7187;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px;margin:0 auto}
+.pg-bar{height:3px;background:var(--mist);border-radius:3px;margin-top:4px;overflow:hidden}.pg-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ink),var(--red));transition:width .5s}
+
+/* CARDS & CONTENT */
+.slide-card{background:var(--card-bg);border-radius:40px 12px 40px 12px;padding:2rem 2.5rem;box-shadow:0 20px 40px -12px rgba(43,45,66,.18);border-left:6px solid var(--red);max-width:1400px;margin:0 auto}
+.slide-card h1,.slide-card h2{color:var(--text-color);font-weight:700;letter-spacing:-.2px}
+.slide-card h2{margin-bottom:1rem}
+.slide-card h2 i{color:var(--crimson)}
+.slide-card h5{font-weight:700;margin-top:1.8rem;margin-bottom:.7rem;scroll-margin-top:1rem}
+.slide-card p,.slide-card li{line-height:1.75}
+.slide-card p{margin-bottom:.85rem}
+.sec-num{display:inline-block;background:var(--ink);color:#fff;border-radius:8px;padding:0 .5rem;font-size:.78rem;margin-right:.5rem;vertical-align:2px}
+.table-wrap{background:var(--card-bg);border-radius:24px;padding:.8rem;box-shadow:0 4px 14px rgba(0,0,0,.04);overflow-x:auto;margin-bottom:1rem}
+.table-wrap table{margin:0;--bs-table-bg:transparent;--bs-table-color:var(--text-color)}
+.table-wrap th{background:var(--ink)!important;color:#fff!important;font-weight:600;border:none;padding:.6rem 1rem;white-space:nowrap}
+.table-wrap td{border:none;padding:.55rem 1rem;vertical-align:top}
+.table-wrap tr:nth-child(even) td{background:rgba(141,153,174,.1)}
+.cover-title{font-size:3.8rem;font-weight:700;letter-spacing:-1px}
+.cover-sub{font-size:1.2rem;color:var(--crimson);border-left:6px solid var(--red);padding-left:1.2rem}
+.toc-list{list-style:none;padding:0}
+.toc-list li{padding:.5rem .3rem;border-bottom:1px solid rgba(43,45,66,.08);font-weight:600;display:flex;align-items:center;gap:.8rem;cursor:pointer;border-radius:8px;transition:background .2s}
+.toc-list li:hover{background:rgba(239,35,60,.06)}
+.toc-list li i{color:var(--crimson);font-size:1.2rem;width:2rem}
+.toc-list li span{background:var(--ink);color:#fff;border-radius:40px;padding:0 .8rem;font-size:.75rem;margin-left:auto}
+.footer-note{font-size:.8rem;color:#6b7187;margin-top:2rem;border-top:1px solid var(--slate);padding-top:1rem}
+.board-badge{background:var(--crimson);color:#fff;padding:.2rem 1rem;border-radius:50px;font-size:.75rem;font-weight:600;display:inline-block;letter-spacing:.5px}
+.chart-container{background:var(--card-bg);border-radius:20px;padding:1rem 1.1rem;border:1px solid var(--border-color);height:100%}
+.chart-container h6{text-align:center;font-weight:700}
+.chart-container .cbox{position:relative;height:260px}
+.chart-container .cbox.tall{height:320px}
+.chart-note{font-size:.8rem;color:#4a4f66;margin-top:.6rem;background:rgba(141,153,174,.14);padding:.55rem .8rem;border-radius:10px;line-height:1.6}
+body.dark-mode .chart-note{color:#d6dbe6}
+.chart-note strong{color:var(--crimson)}
+.insight{margin:1.2rem 0;padding:1rem 1.2rem;border-radius:18px;background:rgba(43,45,66,.06);border-left:4px solid var(--ink);line-height:1.7}
+.insight.red{border-left-color:var(--crimson);background:rgba(239,35,60,.06)}
+.insight i{color:var(--crimson)}
+.st{display:inline-block;font-size:.72rem;font-weight:700;padding:.15rem .6rem;border-radius:50px;white-space:nowrap}
+.st.ok{background:rgba(43,45,66,.1);color:#2B2D42}
+.st.watch{background:rgba(141,153,174,.28);color:#3f465c}
+.st.bad{background:rgba(217,4,41,.1);color:var(--crimson)}
+.quote-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.9rem;margin:.8rem 0 1rem}
+.quote{background:#fff;color:#2B2D42;border:1px solid rgba(43,45,66,.14);border-radius:18px 18px 18px 4px;padding:.85rem 1rem;position:relative;box-shadow:0 4px 12px rgba(43,45,66,.05)}
+.quote p{margin:0 0 .35rem;font-weight:600;line-height:1.5}
+.quote .who{font-size:.74rem;color:#6b7187;display:flex;justify-content:space-between;gap:.5rem}
+.quote.ask{border-color:rgba(239,35,60,.5)}
+.quote.ask::before{content:"Purchase intent";position:absolute;top:-9px;right:12px;background:var(--red);color:#fff;font-size:.62rem;font-weight:700;padding:.05rem .5rem;border-radius:20px}
+.quote.flag{border-color:var(--ink)}
+.quote.flag::before{content:"Needs a response";position:absolute;top:-9px;right:12px;background:var(--ink);color:#fff;font-size:.62rem;font-weight:700;padding:.05rem .5rem;border-radius:20px}
+
+/* GALLERY */
+.gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:.6rem}
+.gallery-card{border-radius:24px 8px 24px 8px;overflow:hidden;box-shadow:inset 0 0 0 2px var(--slate);background:var(--card-bg)}
+.gallery-item{position:relative;min-height:180px;overflow:hidden;cursor:pointer;background:#cfd6de}
+.gallery-item img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top;transition:transform .35s}
+.gallery-item:hover img{transform:scale(1.06)}
+.gallery-caption{position:absolute;left:0;right:0;bottom:0;padding:.6rem .8rem .5rem;background:linear-gradient(to top,rgba(29,31,48,.9),rgba(29,31,48,0));color:#fff;font-weight:600;font-size:.85rem;display:flex;align-items:center;gap:.4rem}
+.gallery-zoom-btn{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:none;background:rgba(217,4,41,.85);color:#fff;opacity:0;transition:opacity .2s;z-index:2}
+.gallery-item:hover .gallery-zoom-btn{opacity:1}
+.lightbox-overlay{position:fixed;inset:0;background:rgba(20,21,33,.93);display:none;align-items:center;justify-content:center;z-index:2000;padding:1rem}
+.lightbox-overlay.open{display:flex}
+.lightbox-content{position:relative;background:#1d1f30;border-radius:28px;padding:.5rem .5rem 4rem;max-width:95vw;max-height:94vh;display:flex;flex-direction:column;align-items:center;border:3px solid var(--red);overflow:hidden}
+.lightbox-image-wrapper{overflow:hidden;display:flex;align-items:center;justify-content:center;border-radius:20px;max-height:74vh}
+.lightbox-image-wrapper img{max-width:90vw;max-height:72vh;border-radius:18px;transition:transform .15s;user-select:none}
+.lightbox-label{margin-top:.5rem;font-size:1.05rem;font-weight:700;color:var(--mist);text-align:center}
+.lightbox-close{position:absolute;top:12px;right:12px;width:40px;height:40px;border-radius:50%;border:none;background:var(--crimson);color:#fff;z-index:10}
+.lightbox-controls{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:.6rem;background:rgba(0,0,0,.7);padding:.45rem .9rem;border-radius:50px;z-index:10}
+.lightbox-controls button{width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.12);color:#fff}
+.lightbox-controls .zoom-level{color:#fff;font-size:.75rem;font-weight:600;display:flex;align-items:center;min-width:38px;justify-content:center}
+.lightbox-nav-btn{position:fixed;top:50%;transform:translateY(-50%);width:48px;height:48px;border-radius:50%;border:none;background:var(--ink);color:#fff;font-size:1.3rem;display:flex;align-items:center;justify-content:center;z-index:2010}
+.lightbox-prev{left:16px}.lightbox-next{right:16px}
+.lightbox-view-account{display:inline-flex;align-items:center;gap:.5rem;margin:.6rem 0 .3rem;padding:.5rem 1.1rem;background:var(--crimson);color:#fff;text-decoration:none;font-weight:600;font-size:.85rem;border-radius:50px}
+
+/* ACCESSIBILITY */
+.access-toggle{position:fixed;bottom:22px;right:22px;z-index:1070;width:52px;height:52px;border-radius:50%;background:var(--ink);color:#fff;border:none;font-size:1.5rem;box-shadow:0 8px 25px rgba(43,45,66,.4);display:flex;align-items:center;justify-content:center}
+.access-panel{position:fixed;bottom:88px;right:22px;z-index:1065;background:#fff;color:#2B2D42;border-radius:24px;padding:1.4rem 1.6rem;box-shadow:0 12px 40px rgba(0,0,0,.25);min-width:260px;display:none}
+.access-panel.open{display:block}
+.access-panel h6{font-weight:700;color:var(--crimson);margin-bottom:1rem;border-bottom:2px solid var(--red);padding-bottom:.5rem}
+.access-panel .btn-group{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.6rem}
+.access-panel .btn-group button{background:var(--ink);color:#fff;border:none;border-radius:50px;padding:.4rem .9rem;font:600 .75rem 'Quicksand',sans-serif;flex:1}
+.access-panel .zoom-display{font-weight:700;color:var(--crimson);text-align:center;font-size:1.1rem;padding:.3rem 0}
+
+/* LOADER */
+#teaLoader{position:fixed;inset:0;z-index:99999;background:radial-gradient(circle at 50% 40%,#3a3d58 0%,#1d1f30 100%);display:flex;align-items:center;justify-content:center;transition:opacity .6s,visibility .6s}
+#teaLoader.loader-hide{opacity:0;visibility:hidden;pointer-events:none}
+.loader-inner{display:flex;flex-direction:column;align-items:center;gap:1.2rem;text-align:center}
+.loader-mug-wrap{position:relative;width:130px;height:130px;display:flex;align-items:center;justify-content:center}
+.loader-steam{position:absolute;top:-34px;display:flex;gap:10px;width:100%;justify-content:center}
+.loader-steam span{width:6px;height:26px;border-radius:50%;background:linear-gradient(to top,rgba(237,242,244,0),rgba(237,242,244,.85));animation:steamRise 1.8s ease-in-out infinite}
+.loader-steam span:nth-child(2){animation-delay:.4s}.loader-steam span:nth-child(3){animation-delay:.8s}
+@keyframes steamRise{0%{transform:translateY(6px);opacity:0}25%{opacity:.85}100%{transform:translateY(-40px) scaleX(1.8);opacity:0}}
+.loader-mug{font-size:4.8rem;color:var(--red);animation:mugTilt 2.2s ease-in-out infinite}
+@keyframes mugTilt{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg) translateY(-4px)}}
+.loader-ring{position:absolute;inset:0;border-radius:50%;border:2px dashed rgba(141,153,174,.5);animation:ringSpin 6s linear infinite}
+@keyframes ringSpin{to{transform:rotate(360deg)}}
+.loader-title{color:var(--mist);font-weight:700;font-size:1.5rem}
+.loader-status{color:var(--slate);font-weight:600;font-size:.95rem;min-height:1.3rem}
+.loader-bar-track{width:min(320px,70vw);height:10px;background:rgba(237,242,244,.15);border-radius:50px;overflow:hidden}
+.loader-bar-fill{height:100%;width:0;background:linear-gradient(90deg,var(--crimson),var(--red));border-radius:50px}
+.loader-percent{color:var(--mist);font-size:.85rem;font-weight:600;opacity:.85}
+
+/* JET MAPS */
+.gm{background:var(--card-bg);border:2px solid var(--slate);border-radius:20px;padding:1rem;height:100%;box-shadow:0 8px 24px rgba(43,45,66,.1)}
+.gm h6{margin:0;font-weight:700}
+.gm .gm-sub{font-size:.75rem;opacity:.7}
+.gm-tabs{display:flex;gap:.4rem;overflow-x:auto;padding:.7rem 0;scrollbar-width:none}
+.gm-tabs button{flex:none;background:#fff;border:1.5px solid var(--ink);color:var(--ink);padding:.35rem .85rem;min-height:34px;border-radius:99px;font:700 .72rem 'Quicksand',sans-serif;cursor:pointer;transition:.3s}
+.gm-tabs button[aria-selected=true]{background:var(--crimson);color:#fff;border-color:var(--crimson)}
+.gm-box{position:relative;border-radius:14px;overflow:hidden;background:#dfe7ee;border:2px solid var(--slate)}
+.gm-box svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.gm-box svg *{vector-effect:non-scaling-stroke}
+.m-g{fill:none;stroke:#2B2D42;stroke-opacity:.1;stroke-width:1}
+.m-l{fill:#f7f9fa;stroke:#8D99AE;stroke-width:.9}
+.m-k{fill:#f7f9fa;stroke:#2B2D42;stroke-width:1.8}
+.m-w{fill:#dfe7ee;stroke:#8D99AE;stroke-width:.7}
+.m-r{fill:none;stroke:#D90429;stroke-opacity:.25;stroke-width:1.4;transition:stroke-opacity .5s}
+.m-r.on{stroke-opacity:.9;stroke-width:2.2}
+.m-f{fill:none;stroke:#2B2D42;stroke-width:2.4;stroke-dasharray:2 11;opacity:0;transition:opacity .5s}
+.m-f.on{opacity:.8;animation:mfl 1s linear infinite}
+@keyframes mfl{to{stroke-dashoffset:-13}}
+.m-d{fill:#EF233C;fill-opacity:.55;stroke:#D90429;stroke-width:1.6;opacity:0;transition:opacity .5s}.m-d.on{opacity:1}
+.m-p{fill:none;stroke:#D90429;stroke-width:1.8;opacity:0;transform-box:fill-box;transform-origin:center}
+.m-p.on{animation:mpl 2.2s ease-out infinite}
+@keyframes mpl{from{transform:scale(.5);opacity:1}to{transform:scale(2.4);opacity:0}}
+.m-t{fill:#2B2D42;font-family:'Quicksand',sans-serif;font-weight:700;opacity:0;paint-order:stroke;stroke:#fff;stroke-linejoin:round;transition:opacity .5s;pointer-events:none}
+.m-t.on{opacity:1}
+.m-c{fill:#2B2D42;fill-opacity:.45}
+.m-ct{fill:#2B2D42;fill-opacity:.65;font-family:'Quicksand',sans-serif;font-weight:600;paint-order:stroke;stroke:#fff}
+.m-j{fill:#2B2D42;stroke:#fff;stroke-width:1}
+.gm-head{display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap}
+.gm-fs{flex:none;display:inline-flex;align-items:center;gap:.4rem;background:var(--ink);color:#fff;border:none;border-radius:99px;padding:.4rem .95rem;min-height:34px;font:700 .72rem 'Quicksand',sans-serif;cursor:pointer}
+.gm-fs:hover{background:var(--crimson)}
+.gm.gm-full{position:fixed;inset:0;z-index:3000;width:100vw;height:100vh;border-radius:0;border:none;padding:1rem 1.2rem;display:flex;flex-direction:column;overflow:auto;background:var(--bg-color)}
+.gm.gm-full .gm-box{aspect-ratio:auto!important;flex:1 1 auto;min-height:55vh}
+.gm-info{margin-top:.8rem;font-size:.82rem;line-height:1.55}
+.gm-info p{margin:.25rem 0 .5rem;opacity:.85}
+.gm-info ul{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:.2rem .8rem}
+.gm-info li{display:flex;justify-content:space-between;gap:.5rem;border-bottom:1px solid rgba(43,45,66,.15);padding:.15rem 0}
+.gm-info li span{color:var(--crimson);font-weight:700;text-align:right}
+.gm-foot{font-size:.7rem;opacity:.6;margin-top:.6rem}
+
+@media(max-width:768px){
+ .wheel-nav{left:.4rem;padding:.4rem .2rem;gap:.2rem;min-width:36px}.wheel-nav .nav-item{width:30px;height:30px;font-size:.7rem;border-width:1.5px}
+ .slide-pane{padding:4rem .8rem 7rem 3.2rem}.slide-card{padding:1.1rem 1.2rem}.cover-title{font-size:2.3rem}
+ .gallery-grid{grid-template-columns:repeat(2,1fr)}.gallery-item{min-height:120px}
+ .pg-info{min-width:110px}.pg-info .pg-title{max-width:120px}.pager .pg-next span{display:none}
+ .menu-btn span{display:none}.access-toggle{width:44px;height:44px;bottom:84px;right:12px}.access-panel{bottom:136px;right:12px}
+ .gm-info ul{grid-template-columns:1fr}
+}
+@media print{body{overflow:visible;height:auto}.book{position:static}.slide-pane{position:relative;visibility:visible!important;page-break-after:always;padding:1rem}.wheel-nav,.pager,.menu-btn,.access-toggle,.spine,.page-edge,#teaLoader{display:none!important}}
+</style>
+</head>
+<body>
+<div id="teaLoader">
+ <div class="loader-inner">
+  <div class="loader-mug-wrap"><div class="loader-ring"></div><div class="loader-steam"><span></span><span></span><span></span></div><i class="bi bi-cup-hot-fill loader-mug"></i></div>
+  <div class="loader-title"><i class="bi bi-cup-hot-fill me-2"></i>Ikumbi Tea</div>
+  <div class="loader-status" id="loaderStatus">Preparing board report…</div>
+  <div class="loader-bar-track"><div class="loader-bar-fill" id="loaderBarFill"></div></div>
+  <div class="loader-percent" id="loaderPercent">0%</div>
+ </div>
+</div>
+
+<button class="menu-btn" id="menuBtn" aria-controls="drawer" aria-expanded="false"><i class="bi bi-list-nested"></i><span>Sections</span></button>
+<div class="drawer-scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Report sections" aria-hidden="true">
+ <div class="drawer-head"><h6><i class="bi bi-journal-text me-2" style="color:var(--crimson)"></i>Report Sections</h6><button class="drawer-close" id="drawerClose" aria-label="Close sections"><i class="bi bi-x-lg"></i></button></div>
+ <input class="drawer-search" id="drawerSearch" type="search" placeholder="Find a section…" aria-label="Find a section">
+ <div class="drawer-list" id="drawerList"></div>
+ <div class="drawer-foot">Click a chapter or any sub-heading to turn straight to it. Keys: ← → turn pages · M opens this menu.</div>
+</aside>
+
+<button class="access-toggle" id="accessToggle" title="Accessibility Controls"><i class="bi bi-universal-access-circle"></i></button>
+<div class="access-panel" id="accessPanel">
+ <h6><i class="bi bi-sliders2 me-2"></i>Accessibility Controls</h6>
+ <div class="zoom-display" id="zoomDisplay">100%</div>
+ <div class="btn-group"><button onclick="zoomIn()"><i class="bi bi-zoom-in"></i> +</button><button onclick="zoomOut()"><i class="bi bi-zoom-out"></i> −</button><button onclick="resetZoom()"><i class="bi bi-arrow-counterclockwise"></i></button></div>
+ <div class="btn-group"><button onclick="toggleDarkMode()"><i class="bi bi-moon"></i> Dark</button><button onclick="toggleContrast()"><i class="bi bi-eye"></i> High Contrast</button></div>
+</div>
+
+<nav class="wheel-nav" id="wheelNav"></nav>
+<div class="nav-tip" id="navTip"></div>
+
+<div class="book" id="book">
+
+<!-- COVER -->
+<div class="slide-pane active-slide" data-label="Cover / Contents" data-icon="bi-house-fill">
+ <div class="slide-card text-center" style="border-left-color:var(--ink);">
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2"><span class="board-badge"><i class="bi bi-building me-1"></i> BOARD REPORT</span><span class="text-muted small">Reporting Period: 24 June 2026 – 22 November 2026</span></div>
+  <h1 class="cover-title mt-3"><i class="bi bi-cup-hot-fill" style="color:var(--crimson)"></i> Ikumbi Tea</h1>
+  <h2 class="display-6 fw-light" style="color:var(--crimson);">Social Media Campaign</h2>
+  <p class="cover-sub mx-auto mt-3 text-start" style="max-width:560px;">Progress Review: Performance, Milestones, KPIs, Analytics &amp; Proposed Way Forward<br><span style="font-size:.9rem;color:#6b7187;">Board of Directors Meeting · Wednesday, 25 November 2026 · 8:00 PM</span></p>
+  <div class="row mt-4 text-start"><div class="col-md-9 mx-auto">
+   <h5 class="border-bottom pb-2 mb-3"><i class="bi bi-list-ul me-2"></i>Table of Contents</h5>
+   <ul class="toc-list" id="tocList"></ul>
+  </div></div>
+  <div class="footer-note">Ikumbi Tea Factory · Murang'a County · Kenya Tea Development Agency (KTDA)</div>
+ </div>
+</div>
+
+<!-- 1.0 -->
+<div class="slide-pane" data-label="1.0 Progress Since Last Review" data-icon="bi-signpost-split">
+ <div class="slide-card">
+  <h2><i class="bi bi-signpost-split me-2"></i>1.0 Progress Since the Last Review</h2>
+  <p>The Board last reviewed the campaign on 25 August 2026, eight weeks after the accounts went live. This section covers what has happened since then. It takes the August position as the baseline and follows each platform forward to 22 November 2026.</p>
+
+  <h5 id="s1-1"><span class="sec-num">1.1</span>Where we were in August</h5>
+  <p>In August the campaign had made the brand known. Across Facebook, Instagram, TikTok and X it had about 48,000 views, it had been recognised by KTDA through reposts, and people were regularly asking when the product would be available. TikTok was the fastest‑growing channel then, with about 21,000 views. Facebook was close behind at about 19,000.</p>
+
+  <h5 id="s1-2"><span class="sec-num">1.2</span>Where we are now</h5>
+  <p>Facebook and TikTok alone have now passed <strong>101,000 views</strong>, more than double the total for all four platforms in August. The growth has not been even. Facebook has become our leading channel, rising from about 19,000 to <strong>75,801 views</strong>. TikTok has grown only modestly, from about 21,000 to <strong>25,200 views</strong>. This change of position is the most important development since the last meeting, and most of this report explains it.</p>
+
+  <div class="row g-3 mt-1">
+   <div class="col-lg-7"><div class="chart-container">
+    <h6>Cumulative Views at Each Checkpoint</h6>
+    <div class="cbox"><canvas id="progressChart"></canvas></div>
+    <div class="chart-note"><strong>Reading the chart:</strong> In the first month both platforms grew at a similar pace. From August, Facebook speeds up sharply while TikTok levels off. Facebook gained about <strong>56,800 views</strong> in the last three months, about three times what it gained in all the weeks before August. TikTok gained about <strong>4,200</strong>.</div>
+   </div></div>
+   <div class="col-lg-5"><div class="chart-container">
+    <h6>Views Gained in Each Period</h6>
+    <div class="cbox"><canvas id="gainChart"></canvas></div>
+    <div class="chart-note">TikTok gained more in the single month of late July to August (14.3K) than in the three months since. Facebook went the other way.</div>
+   </div></div>
+  </div>
+
+  <h5 id="s1-3"><span class="sec-num">1.3</span>Why the shift happened: a change of strategy</h5>
+  <p>The shift was deliberate. A new brand with no existing audience faces a hard climb on every platform. Posting regularly is not enough when there is no audience to post to yet, and the content is simply ignored. In September we changed approach: <strong>grow strongly on the platforms where growth is easier and pays off faster, and then use that momentum on the harder ones.</strong> Facebook responded best, so it received most of the effort. We kept posting on TikTok, Instagram and X, but we now judge their results by a different standard for this phase.</p>
+  <p>The approach has worked on Facebook. Its cost is that TikTok slowed down. Section 4 shows that gap has now become too wide, and Section 9 proposes how to close it.</p>
+
+  <h5 id="s1-4"><span class="sec-num">1.4</span>Key milestones in the period</h5>
+  <div class="table-wrap"><table class="table table-borderless">
+   <thead><tr><th>Date</th><th>Milestone</th><th>Significance</th></tr></thead>
+   <tbody>
+    <tr><td>15 – 17 Jul</td><td>First TikTok breakthroughs (#KickTheColdWithIkumbi), 1.4K and 1.7K views a day</td><td>Showed that TikTok will push our content to new viewers</td></tr>
+    <tr><td>25 Aug</td><td>Board report: about 48K views across all platforms; KTDA reposts</td><td>Baseline for this review</td></tr>
+    <tr><td>Sep</td><td>New strategy: focus effort on the platforms that respond fastest</td><td>Facebook becomes the main channel</td></tr>
+    <tr><td>Mid‑Oct</td><td>Facebook's first big day: about 7,000 views in a day</td><td>Daily views jump to a new level</td></tr>
+    <tr><td>2 Nov</td><td>“I work so I can buy chai” post: <strong>18,550 views</strong></td><td>Best single post of the campaign so far</td></tr>
+    <tr><td>20 Nov</td><td>Factory community album: <strong>17,754 views</strong>, 42 reactions, 10 shares</td><td>Second post above 17K in the same month</td></tr>
+    <tr><td>Nov</td><td>TikTok's best single day (about 2K views)</td><td>TikTok can still break through when we post</td></tr>
+    <tr><td>22 Nov</td><td>101K views on Facebook and TikTok combined</td><td>More than double August's four‑platform total</td></tr>
+   </tbody></table></div>
+ </div>
+</div>
+
+<!-- 2.0 -->
+<div class="slide-pane" data-label="2.0 Milestones & KPIs" data-icon="bi-clipboard-data">
+ <div class="slide-card">
+  <h2><i class="bi bi-clipboard-data me-2"></i>2.0 Performance Against KPIs</h2>
+  <p>The scorecard below compares each measure with the August position. It uses three statuses. <span class="st ok">On track</span> means the measure is moving in the right direction at a healthy rate. <span class="st watch">Watch</span> means it is improving but too slowly, or the picture is mixed. <span class="st bad">Behind</span> means it has stalled or is holding the campaign back.</p>
+
+  <h5 id="s2-1"><span class="sec-num">2.1</span>KPI scorecard</h5>
+  <div class="table-wrap"><table class="table table-borderless">
+   <thead><tr><th>KPI</th><th>Aug 2026</th><th>22 Nov 2026</th><th>Status</th><th>Comment</th></tr></thead>
+   <tbody>
+    <tr><td><strong>Total views (FB + TikTok)</strong></td><td>~40K</td><td>101K</td><td><span class="st ok">On track</span></td><td>More than doubled; the brand is now widely seen</td></tr>
+    <tr><td>Facebook views</td><td>~19K</td><td>75.8K</td><td><span class="st ok">On track</span></td><td>About 4×; now our main channel</td></tr>
+    <tr><td>Facebook posts above 10K views</td><td>0</td><td>2</td><td><span class="st ok">On track</span></td><td>18,550 and 17,754, both in November</td></tr>
+    <tr><td>Facebook engagement on top posts</td><td>—</td><td>0.31%</td><td><span class="st bad">Behind</span></td><td>Many people see the posts but few react or comment</td></tr>
+    <tr><td>Share of FB views from followers</td><td>—</td><td>8.8%</td><td><span class="st watch">Watch</span></td><td>Viewers are not yet becoming followers</td></tr>
+    <tr><td>TikTok video views</td><td>21K</td><td>25.2K</td><td><span class="st bad">Behind</span></td><td>+20% in three months; growth has stalled</td></tr>
+    <tr><td>TikTok likes</td><td>790</td><td>1.2K</td><td><span class="st ok">On track</span></td><td>+52%; existing viewers are still engaging</td></tr>
+    <tr><td>TikTok comments / shares</td><td>152 / 35</td><td>186 / 44</td><td><span class="st watch">Watch</span></td><td>Growing slowly</td></tr>
+    <tr><td>TikTok engagement rate</td><td>4.7%</td><td>5.7%</td><td><span class="st ok">On track</span></td><td>Healthy for a young brand</td></tr>
+    <tr><td>TikTok followers</td><td>—</td><td>298</td><td><span class="st bad">Behind</span></td><td>Follower base is too small to give each video a starting audience</td></tr>
+    <tr><td>Instagram followers</td><td>—</td><td>Growing</td><td><span class="st ok">On track</span></td><td>Growing faster than X</td></tr>
+    <tr><td>X (Twitter)</td><td>3K views</td><td>Low response</td><td><span class="st watch">Watch</span></td><td>Judged differently in this phase (Section 6)</td></tr>
+    <tr><td><strong>Sales channel in place</strong></td><td>No</td><td>No</td><td><span class="st bad">Behind</span></td><td>Needs a Board decision (Section 11)</td></tr>
+   </tbody></table></div>
+  <p class="small text-muted">August TikTok engagement rate = (790 + 152 + 35) ÷ 21,000. August "Total views" counts Facebook and TikTok only, to compare like with like.</p>
+
+  <h5 id="s2-2"><span class="sec-num">2.2</span>What the scorecard tells us</h5>
+  <p>The results are mixed, and the pattern is clear. Every measure of <strong>visibility</strong> is on track: total views, Facebook views and the number of large posts. The measures that are behind are the ones about turning that visibility into something lasting: engagement, followers and sales. The brand is being seen. It is not yet being followed, and nobody can buy from it.</p>
+  <div class="insight red"><i class="bi bi-exclamation-triangle-fill me-2"></i><strong>Board summary:</strong> In the next phase, success should be measured less by how many people see us and more by how many follow us, talk to us and ask to buy.</div>
+ </div>
+</div>
+
+<!-- 3.0 -->
+<div class="slide-pane" data-label="3.0 Facebook Analytics" data-icon="bi-facebook">
+ <div class="slide-card">
+  <h2><i class="bi bi-facebook me-2"></i>3.0 Facebook Analytics</h2>
+  <p>Facebook has become the campaign's main channel. From 1 January to 22 November 2026 the page recorded <strong>75,801 views</strong>, <strong>5,286 three‑second video views</strong> and <strong>20 hours 24 minutes</strong> of watch time. This section looks at how those views built up, which content earned them, and who saw them.</p>
+
+  <h5 id="s3-1"><span class="sec-num">3.1</span>How views built up over time</h5>
+  <p>Facebook views did not grow steadily. They came in bursts. From July to September daily views peaked at around 1,000–1,300 on our best days. In mid‑October, after the change of strategy, one day reached about 7,000 views. Then on 2 November the chai post took the page to its highest day of the year, about 18,500 views.</p>
+  <div class="row g-3">
+   <div class="col-lg-7"><div class="chart-container">
+    <h6>Peak Daily Views by Phase</h6>
+    <div class="cbox"><canvas id="fbPeakChart"></canvas></div>
+    <div class="chart-note"><strong>Analysis:</strong> Each phase's best day is far higher than the one before. A single strong post can now reach more people in a day than the page reached in its first month. The weakness is the quiet days between peaks. We do not yet have a regular audience that comes back every day. Values are read from the Meta daily views chart.</div>
+   </div></div>
+   <div class="col-lg-5"><div class="chart-container">
+    <h6>Views: Followers vs Non‑Followers</h6>
+    <div class="cbox"><canvas id="fbFollowChart"></canvas></div>
+    <div class="chart-note"><strong>91.2%</strong> of views come from people who do not follow the page. Facebook is sending our posts to new audiences, which is good for reach. But very few of those viewers come back as followers.</div>
+   </div></div>
+  </div>
+
+  <h5 id="s3-2"><span class="sec-num">3.2</span>What content earns the views</h5>
+  <div class="row g-3">
+   <div class="col-md-6"><div class="chart-container">
+    <h6>Views by Content Type</h6>
+    <div class="cbox"><canvas id="fbTypeChart"></canvas></div>
+    <div class="chart-note">Photos (56.6%) and multi‑photo albums (29.8%) bring in <strong>86%</strong> of all views. Reels bring in only 13.4%, even though Facebook currently gives video extra reach. Video is our biggest untapped opportunity on this platform.</div>
+   </div></div>
+   <div class="col-md-6"><div class="chart-container">
+    <h6>How People Find Our Content</h6>
+    <div class="cbox"><canvas id="fbTrafficChart"></canvas></div>
+    <div class="chart-note">The news feed delivers <strong>81.8%</strong> of views and Reels 13.5%. Only 2.8% come from people visiting the page directly. Stories (0%) and Groups (0.3%) contribute almost nothing. Both are free channels we have not used yet.</div>
+   </div></div>
+  </div>
+
+  <h5 id="s3-3"><span class="sec-num">3.3</span>Post‑by‑post analysis</h5>
+  <p>The six most recent posts show clearly what works. The best post earned <strong>fourteen times</strong> the views of the weakest.</p>
+  <div class="chart-container mb-3">
+   <h6>Views per Recent Post</h6>
+   <div class="cbox tall"><canvas id="fbPostsChart"></canvas></div>
+  </div>
+  <div class="table-wrap"><table class="table table-borderless">
+   <thead><tr><th>Date</th><th>Post</th><th>Format</th><th>Views</th><th>Why it performed as it did</th></tr></thead>
+   <tbody>
+    <tr><td>2 Nov</td><td><strong>“I work so I can buy chai. I buy chai so I can work.”</strong></td><td>Photo</td><td><strong>18,550</strong></td><td>Simple, relatable humour about everyday Kenyan work life. It reads as a joke people share, not an advert, so it spread well beyond our followers.</td></tr>
+    <tr><td>20 Nov</td><td><strong>Factory community album</strong> (17 photos)</td><td>Multi‑photo</td><td><strong>17,754</strong></td><td>Real people at the real factory. 42 reactions, 4 comments and 10 shares. It reached the local community, who commented “Congratulations” and asked about farmer payments.</td></tr>
+    <tr><td>15 Nov</td><td>Withering beds in the factory</td><td>Reel</td><td>5,558</td><td>Our best video, but there is no narration and no hook in the first seconds. It reached less than a third of the top photo's audience.</td></tr>
+    <tr><td>20 Nov</td><td>Team photo at the factory</td><td>Photo</td><td>4,831</td><td>Posted two hours after the album on the same day, so the two posts competed for the same audience.</td></tr>
+    <tr><td>28 Oct</td><td>“Ikumbi tea is the breakfast King”</td><td>Photo</td><td>3,599</td><td>A polished product advert. It looks good, but audiences scroll past content that feels like advertising.</td></tr>
+    <tr><td>4 Nov</td><td>Tea tasting cups</td><td>Photo</td><td>1,272</td><td>An attractive image with no people, no story and no question. Process content needs a face and a reason to stop.</td></tr>
+   </tbody></table></div>
+  <div class="insight"><i class="bi bi-lightbulb-fill me-2"></i><strong>The lesson:</strong> People respond to <strong>culture and community</strong>: chai humour and real faces at the factory. Polished adverts and process shots without a story get a fraction of the reach. On our biggest post, only 0.31% of viewers reacted, commented or shared. Every post now needs a reason for people to respond: a question, a “tag your chai partner” prompt, or a poll.</div>
+ </div>
+</div>
+
+<!-- 4.0 -->
+<div class="slide-pane" data-label="4.0 TikTok Analytics" data-icon="bi-tiktok">
+ <div class="slide-card">
+  <h2><i class="bi bi-tiktok me-2"></i>4.0 TikTok Analytics</h2>
+  <p>Over the last 365 days TikTok recorded <strong>25,200 video views</strong>, <strong>1,200 likes</strong>, <strong>186 comments</strong>, <strong>44 shares</strong> and <strong>342 profile views</strong>, and the account now has <strong>298 followers</strong>. In August TikTok was our leading platform. It is now second, and it needs to be looked at honestly.</p>
+
+  <h5 id="s4-1"><span class="sec-num">4.1</span>The best engagement, but growth has stalled</h5>
+  <p>TikTok has two very different sides. Its audience is the <strong>most engaged</strong> we have: 5.7% of viewers like, comment or share, about eighteen times the rate on our biggest Facebook post. But its <strong>growth has stalled</strong>. It gained only about 4,200 views in three months, after gaining 14,300 in the single month before the August report.</p>
+  <div class="row g-3">
+   <div class="col-md-6"><div class="chart-container">
+    <h6>Engagement Rate: TikTok vs Facebook</h6>
+    <div class="cbox"><canvas id="engageChart"></canvas></div>
+    <div class="chart-note">TikTok: (1,200 likes + 186 comments + 44 shares) ÷ 25,200 views = <strong>5.67%</strong>. Facebook (17.8K album): (42 + 4 + 10) ÷ 17,800 = <strong>0.31%</strong>.</div>
+   </div></div>
+   <div class="col-md-6"><div class="chart-container">
+    <h6>TikTok Metrics: August vs November</h6>
+    <div class="cbox"><canvas id="ttCompareChart"></canvas></div>
+    <div class="chart-note">Likes grew 52% while views grew only 20%. The people who do see our videos engage more than before, but fewer new people are seeing them.</div>
+   </div></div>
+  </div>
+
+  <h5 id="s4-2"><span class="sec-num">4.2</span>How viewers find us</h5>
+  <div class="row g-3">
+   <div class="col-md-6"><div class="chart-container">
+    <h6>Traffic Sources</h6>
+    <div class="cbox"><canvas id="ttTrafficChart"></canvas></div>
+    <div class="chart-note">The <strong>For You</strong> feed delivers 89.1% of views (up from 68.8% in August), so TikTok's recommendations are still working for us. But only <strong>0.4%</strong> comes from the Following feed. Our 298 followers rarely see new videos, so each video has to find its audience from scratch. We have also used no trending sounds (0%), which are one of the easiest ways to gain reach.</div>
+   </div></div>
+   <div class="col-md-6"><div class="chart-container">
+    <h6>Top Search Queries Leading to Us</h6>
+    <div class="cbox"><canvas id="ttSearchChart"></canvas></div>
+    <div class="chart-note">People reach us by searching for <strong>other tea factories</strong>: Kisyet in Bomet, and Kisoro and Kyamuhunga in Uganda. There is real interest in tea‑factory content across the region. “nkumbi” is a misspelling of our name, so captions should include spelling variants.</div>
+   </div></div>
+  </div>
+
+  <h5 id="s4-3"><span class="sec-num">4.3</span>Why TikTok slowed</h5>
+  <p>TikTok's analytics show a series of single spikes: about 1.4K and 1.7K views a day in July, 1.6K and 1.4K in September, 1.8K in October and about 2K in November, with almost no views in between. That pattern points to three causes:</p>
+  <ul>
+   <li><strong>Less effort:</strong> the change of strategy moved most effort to Facebook. This was planned, but the gap has now grown too wide.</li>
+   <li><strong>No regular rhythm:</strong> without a recurring series or fixed posting days, viewers have no reason to come back for the next video.</li>
+   <li><strong>We have not used TikTok's own growth tools:</strong> trending sounds, replying to comments with videos, and working with creators.</li>
+  </ul>
+  <div class="insight red"><i class="bi bi-arrow-repeat me-2"></i><strong>Assessment:</strong> TikTok is not failing. It is underfed. The audience is engaged and TikTok's recommendations still push our content. What is missing is regular, platform‑native posting. Section 9 sets out a plan to restart it in January.</div>
+ </div>
+</div>
+
+<!-- 5.0 -->
+<div class="slide-pane" data-label="5.0 Audience, Regions & Maps" data-icon="bi-globe2">
+ <div class="slide-card">
+  <h2><i class="bi bi-globe2 me-2"></i>5.0 Audience Demographics &amp; Geographic Reach</h2>
+  <p>The most important finding of this deeper analysis is that <strong>Facebook and TikTok reach two different audiences</strong>. Facebook reaches an older, mostly male, rural audience around the factory in Murang'a. TikTok reaches a younger, urban audience concentrated in Nairobi. Each needs its own content and, after launch, its own way to buy.</p>
+
+  <h5 id="s5-1"><span class="sec-num">5.1</span>Age &amp; gender</h5>
+  <div class="row g-3">
+   <div class="col-lg-8"><div class="chart-container">
+    <h6>Age Distribution: Facebook vs TikTok</h6>
+    <div class="cbox"><canvas id="ageChart"></canvas></div>
+    <div class="chart-note"><strong>Analysis:</strong> On Facebook, <strong>67.8%</strong> of viewers are 35 or older, and the largest group is 35–44 (28.2%). On TikTok, <strong>76.0%</strong> are under 35, and the largest group is 25–34 (43.8%). The two platforms barely overlap: Facebook reaches established households and farmers, and TikTok reaches young professionals and students. (Facebook's 55–64 and 65+ groups are combined to match TikTok's 55+.)</div>
+   </div></div>
+   <div class="col-lg-4"><div class="chart-container">
+    <h6>Gender (TikTok)</h6>
+    <div class="cbox"><canvas id="genderChart"></canvas></div>
+    <div class="chart-note">TikTok: <strong>57% male, 43% female</strong>, almost unchanged since August (59/41). On Facebook, men are the majority in every age group.</div>
+   </div></div>
+  </div>
+
+  <h5 id="s5-2"><span class="sec-num">5.2</span>Regional distribution in Kenya: live map</h5>
+  <p>Within Kenya the platforms split again. Facebook's audience is centred on <strong>Maragwa (53.4%)</strong>, the area around the factory, followed by Nairobi (22.7%) and Thika (6.8%). Kericho and Nandi (3.4% each) are also tea‑growing areas. TikTok's audience is concentrated in <strong>Nairobi (81.8%)</strong>, with smaller groups in Kisumu (5.8%) and Malindi (5.6%). Compared with August, the Kenyan audience has <strong>spread from the centre to the coast and the west</strong>: Kisumu, Malindi and Mombasa are new.</p>
+  <div class="gm mb-3">
+   <div class="gm-head"><h6><i class="bi bi-geo-alt me-1"></i> Kenya Distribution: Maragwa leads Facebook, Nairobi leads TikTok</h6><button class="gm-fs" type="button" aria-label="View map fullscreen"><i class="bi bi-arrows-fullscreen"></i> <span>Fullscreen</span></button></div>
+   <div class="gm-sub">Routes start from Ikumbi Tea, Murang'a. Bubble size = audience share. Select a region to zoom in.</div>
+   <div class="gm-tabs" role="tablist" id="kTabs" aria-label="Kenya regions"></div>
+   <div class="gm-box" style="aspect-ratio:16/10"><svg id="kMap" viewBox="0 0 880 1050" role="img" aria-label="Map of Kenya with audience share by town"></svg></div>
+   <div class="gm-info" id="kInfo" aria-live="polite"></div>
+   <div class="gm-foot">Kenya outline is simplified. FB = Facebook (lifetime towns/cities); TT = TikTok (viewer locations).</div>
+  </div>
+  <div class="row g-3">
+   <div class="col-md-6"><div class="chart-container">
+    <h6>Facebook: Top Towns &amp; Cities</h6>
+    <div class="cbox"><canvas id="fbTownChart"></canvas></div>
+    <div class="chart-note">Central Kenya (Maragwa, Nairobi, Thika) = <strong>82.9%</strong> of Facebook viewers. Facebook is where our home community, our farmers and their families, follows the brand.</div>
+   </div></div>
+   <div class="col-md-6"><div class="chart-container">
+    <h6>TikTok: Top Cities</h6>
+    <div class="cbox"><canvas id="ttCityChart"></canvas></div>
+    <div class="chart-note">Nairobi makes up <strong>82–85%</strong> of TikTok viewers across the two TikTok location views (81.8% and 84.8%). TikTok is our way into the capital's young consumer market.</div>
+   </div></div>
+  </div>
+
+  <h5 id="s5-3"><span class="sec-num">5.3</span>International reach: live map</h5>
+  <p>Kenya accounts for <strong>97.2%</strong> of Facebook viewers and <strong>92.9%</strong> of TikTok viewers. The rest of the audience is spread over <strong>11 named countries</strong> on four continents, up from about six in August. The Gulf states (Qatar, Saudi Arabia, UAE and Kuwait) are the strongest group, almost certainly Kenyans working abroad. On Facebook, <strong>Pakistan (1.4%)</strong> is our largest foreign audience. Pakistan is one of the biggest buyers of Kenyan tea, so this is worth noting for future export marketing.</p>
+  <div class="gm mb-3">
+   <div class="gm-head"><h6><i class="bi bi-globe2 me-1"></i> International Reach: 11 countries beyond Kenya</h6><button class="gm-fs" type="button" aria-label="View map fullscreen"><i class="bi bi-arrows-fullscreen"></i> <span>Fullscreen</span></button></div>
+   <div class="gm-sub">Select a region to focus the flight routes</div>
+   <div class="gm-tabs" role="tablist" id="wTabs" aria-label="World regions"></div>
+   <div class="gm-box" style="aspect-ratio:1000/430"><svg id="wMap" viewBox="0 0 1000 430" role="img" aria-label="World map with flight routes from Kenya to the countries reached"></svg></div>
+   <div class="gm-info" id="wInfo" aria-live="polite"></div>
+   <div class="gm-foot">Routes show audience countries from Facebook and TikTok analytics; map outlines are simplified.</div>
+  </div>
+  <div class="row g-3">
+   <div class="col-md-6"><div class="chart-container"><h6>Countries: Facebook</h6><div class="cbox"><canvas id="fbCountryChart"></canvas></div></div></div>
+   <div class="col-md-6"><div class="chart-container"><h6>Countries: TikTok</h6><div class="cbox"><canvas id="ttCountryChart"></canvas></div></div></div>
+  </div>
+
+  <h5 id="s5-4"><span class="sec-num">5.4</span>What this means for the brand</h5>
+  <div class="table-wrap"><table class="table table-borderless">
+   <thead><tr><th></th><th><i class="bi bi-facebook"></i> Facebook audience</th><th><i class="bi bi-tiktok"></i> TikTok audience</th></tr></thead>
+   <tbody>
+    <tr><td><strong>Who they are</strong></td><td>Farmers, families and local tea drinkers; 35+; mostly men</td><td>Young professionals and students; under 35</td></tr>
+    <tr><td><strong>Where they are</strong></td><td>Maragwa, Thika, Nairobi; tea‑growing areas</td><td>Nairobi; Kisumu and Malindi</td></tr>
+    <tr><td><strong>What they respond to</strong></td><td>The factory, its people, chai humour</td><td>Trends, recurring series, everyday life</td></tr>
+    <tr><td><strong>How they would buy</strong></td><td>Local shops, the factory, WhatsApp orders</td><td>Supermarkets, online orders, delivery</td></tr>
+   </tbody></table></div>
+ </div>
+</div>
+
+<!-- 6.0 -->
+<div class="slide-pane" data-label="6.0 Instagram & X" data-icon="bi-twitter-x">
+ <div class="slide-card">
+  <h2><i class="bi bi-instagram me-2"></i>6.0 Instagram &amp; X: Strategic Assessment</h2>
+  <p>Instagram and X have been reviewed separately because, under the current strategy, they are deliberately in a different phase. We still post on both. They are not abandoned. But it would be misleading to judge them by the same measures as Facebook at this stage.</p>
+
+  <h5 id="s6-1"><span class="sec-num">6.1</span>Instagram: growing</h5>
+  <p>Of the two, <strong>Instagram is the one where followers are growing</strong>. At the August review it had about 5,000 views from just 10 posts, the best views per post of any platform at that time. Instagram suits the content that already works for us: reels we have already made for Facebook and TikTok can be posted there with very little extra effort. It is the natural next platform to build up, using Collab posts with partners and carousels of our best Facebook photos.</p>
+
+  <h5 id="s6-2"><span class="sec-num">6.2</span>X (Twitter): why our effort there has not paid off yet</h5>
+  <p>At the August review X had about 3,000 views from 15 posts, and it has grown little since. This is not a quality problem. It comes from <strong>what X rewards</strong>. X is built around <strong>conversation</strong>. It promotes accounts that start debates, reply to others and join topics that are already trending. A new brand account with no existing following, posting brand images, gets almost no visibility there. Posting regularly does not change that.</p>
+  <p>For a brand that started with no presence anywhere, building on X first would be the hardest route. That is why it comes later in our plan. When we turn to it, the approach will be <strong>to join conversations, not to broadcast</strong>:</p>
+  <div class="table-wrap"><table class="table table-borderless">
+   <thead><tr><th>Approach</th><th>Example</th><th>How we will measure it</th></tr></thead>
+   <tbody>
+    <tr><td>Start debates people want to join</td><td>“Chai: milk first or water first? Settle this.” · “Is chai and mandazi still Kenya's best breakfast?”</td><td>Replies per post</td></tr>
+    <tr><td>Reply to large Kenyan accounts and trending topics</td><td>Timely, witty chai replies (avoiding political topics)</td><td>Profile visits, mentions</td></tr>
+    <tr><td>Polls and threads</td><td>“Rate your office tea 1–10” · a thread following the leaf from farm to cup</td><td>Votes, quote posts</td></tr>
+    <tr><td>Share our proven content</td><td>Our best Facebook and TikTok posts, rewritten to suit X</td><td>Engagement rate</td></tr>
+   </tbody></table></div>
+  <div class="insight"><i class="bi bi-info-circle-fill me-2"></i><strong>Note to the Board:</strong> Instagram and X are posted to every week but judged more gently in this phase. On X we will measure replies, quote posts and mentions, not views. Up‑to‑date follower figures for both platforms will be presented at the meeting.</div>
+ </div>
+</div>
+
+<!-- 7.0 -->
+<div class="slide-pane" data-label="7.0 Community Feedback" data-icon="bi-chat-quote">
+ <div class="slide-card">
+  <h2><i class="bi bi-chat-quote me-2"></i>7.0 Community Feedback: What People Are Saying</h2>
+  <p>We reviewed 14 recent comments on our Facebook posts. None were negative. They are quoted below as written, with commenters identified by first name and initial. Together they show something the view counts do not: <strong>many of the people engaging with us already drink Ikumbi tea, are proud of it, and want more of it.</strong></p>
+
+  <h5 id="s7-1"><span class="sec-num">7.1</span>Praise for the product</h5>
+  <div class="quote-grid">
+   <div class="quote"><p>“The best tea in kenya”</p><div class="who"><span>Reuben K.</span></div></div>
+   <div class="quote"><p>“The best tea I have ever tasted!”</p><div class="who"><span>Richard K.</span><span><i class="bi bi-hand-thumbs-up-fill"></i> 1</span></div></div>
+   <div class="quote"><p>“The tea with best taste stronger aroma”</p><div class="who"><span>Paul P.</span><span><i class="bi bi-hand-thumbs-up-fill"></i> 1</span></div></div>
+   <div class="quote"><p>“My favorite tea ever”</p><div class="who"><span>Esther M.</span><span><i class="bi bi-hand-thumbs-up-fill"></i> 1</span></div></div>
+   <div class="quote"><p>“Ikumbi tea always th best”</p><div class="who"><span>Peter M.</span></div></div>
+   <div class="quote"><p>“Value added, Ikumbi tea.”</p><div class="who"><span>Willy M.</span><span><i class="bi bi-hand-thumbs-up-fill"></i> 1</span></div></div>
+   <div class="quote"><p>“The best tea with a good test also we have special tea tukunywe chai tamu na ikumbi tea factory”</p><div class="who"><span>Jymoh J., shared a photo of green &amp; red Ikumbi packs</span></div></div>
+   <div class="quote"><p>“Congratulations ❤️❤️❤️”</p><div class="who"><span>Pinches P., on the 17.8K album</span><span><i class="bi bi-hand-thumbs-up-fill"></i> 1</span></div></div>
+  </div>
+
+  <h5 id="s7-2"><span class="sec-num">7.2</span>Requests to buy &amp; new products</h5>
+  <div class="quote-grid">
+   <div class="quote ask"><p>“Special tea Iko how can I get it”</p><div class="who"><span>Mungai K.</span><span><i class="bi bi-hand-thumbs-up-fill"></i> 1</span></div></div>
+   <div class="quote ask"><p>“Due to public demand we need Jinja tea”</p><div class="who"><span>Richmond K.</span><span><i class="bi bi-hand-thumbs-up-fill"></i> 2</span></div></div>
+  </div>
+
+  <h5 id="s7-3"><span class="sec-num">7.3</span>Belonging, pride &amp; accountability</h5>
+  <div class="quote-grid">
+   <div class="quote"><p>“My factory”</p><div class="who"><span>Esther M.</span></div></div>
+   <div class="quote"><p>“Good job 👍. I was one of you back in 2016”</p><div class="who"><span>Dancan M., former staff</span><span><i class="bi bi-hand-thumbs-up-fill"></i> 1</span></div></div>
+   <div class="quote"><p>“Salimia my boss Gatangi spm”</p><div class="who"><span>Samuel M.</span></div></div>
+   <div class="quote flag"><p>“how will you reduce the cost of production and improve on payment of farmers”</p><div class="who"><span>Mwangi M. (agri page), on the 17.8K album</span></div></div>
+  </div>
+
+  <h5 id="s7-4"><span class="sec-num">7.4</span>Analysis of the feedback</h5>
+  <div class="table-wrap"><table class="table table-borderless">
+   <thead><tr><th>Theme</th><th>What the comments show</th><th>Recommended response</th></tr></thead>
+   <tbody>
+    <tr><td><strong>Quality is our strongest message</strong></td><td>Eight comments praise the taste, aroma or quality without any prompting from us: “best tea in Kenya”, “best I have ever tasted”.</td><td>Make taste the centre of the launch, and repost customer quotes (with permission).</td></tr>
+    <tr><td><strong>People want to buy</strong></td><td>“How can I get it” has no answer we can give yet.</td><td>A WhatsApp Business line and a pinned “where to buy” post as soon as possible.</td></tr>
+    <tr><td><strong>Product is already in circulation</strong></td><td>A follower posted a photo of green and red Ikumbi packs.</td><td>Confirm officially which products are on sale and where, so customers are not confused.</td></tr>
+    <tr><td><strong>Demand for a new flavour</strong></td><td>“We need Jinja tea” (most likely ginger), liked by two others.</td><td>Refer to product development; test demand with a poll.</td></tr>
+    <tr><td><strong>Farmers are watching</strong></td><td>A public question about production costs and farmer payments, on a post seen 17,754 times.</td><td>Management to provide an approved, factual reply. Not replying is the greater risk to our reputation.</td></tr>
+   </tbody></table></div>
+  <div class="insight red"><i class="bi bi-people-fill me-2"></i><strong>Key insight:</strong> On Facebook the community already sees Ikumbi as <em>“my factory”</em> and its tea as <em>“the best in Kenya”</em>. That goodwill is our biggest asset at launch. It will only turn into sales if people are told where to buy.</div>
+ </div>
+</div>
+
+<!-- 8.0 -->
+<div class="slide-pane" data-label="8.0 Strengths & Weaknesses" data-icon="bi-clipboard2-pulse">
+ <div class="slide-card">
+  <h2><i class="bi bi-clipboard2-pulse me-2"></i>8.0 Strengths, Weaknesses &amp; Root Causes</h2>
+  <p>This section sets out frankly where the campaign is doing well and where it is falling short, with the reasons for each based on the data.</p>
+
+  <h5 id="s8-1"><span class="sec-num">8.1</span>Our strengths</h5>
+  <div class="table-wrap"><table class="table table-borderless">
+   <thead><tr><th>Strength</th><th>Evidence</th></tr></thead>
+   <tbody>
+    <tr><td><strong>Strong reach without paid advertising</strong></td><td>101K views; 91% of Facebook views and 89% of TikTok views reach people who do not yet follow us. All of it is organic.</td></tr>
+    <tr><td><strong>We know which content works</strong></td><td>Chai‑culture humour (18,550) and real factory community posts (17,754) far outperform adverts (3,599) and process images (1,272).</td></tr>
+    <tr><td><strong>A product people already love</strong></td><td>Unprompted comments praising the taste; packs already in circulation.</td></tr>
+    <tr><td><strong>Strong local support</strong></td><td>Maragwa is 53% of Facebook viewers. Staff, former staff and farmers say “my factory”.</td></tr>
+    <tr><td><strong>An engaged young audience</strong></td><td>5.7% engagement on TikTok; 76% of TikTok viewers are under 35, mostly in Nairobi.</td></tr>
+    <tr><td><strong>Industry recognition &amp; reach abroad</strong></td><td>KTDA reposts; audience in 11 named countries beyond Kenya.</td></tr>
+   </tbody></table></div>
+
+  <h5 id="s8-2"><span class="sec-num">8.2</span>Where we are falling short, and why</h5>
+  <div class="table-wrap"><table class="table table-borderless">
+   <thead><tr><th>Weakness</th><th>Evidence</th><th>Root cause</th></tr></thead>
+   <tbody>
+    <tr><td><strong>Viewers are not becoming followers</strong></td><td>Followers account for only 8.8% of Facebook views and 0.4% of TikTok views</td><td>No recurring series, no calls to follow, and comments are not answered consistently</td></tr>
+    <tr><td><strong>Low engagement on Facebook</strong></td><td>0.31% on the 17.8K post</td><td>Captions tell people things instead of asking them something</td></tr>
+    <tr><td><strong>TikTok has stalled</strong></td><td>+4.2K views in three months</td><td>Effort moved to Facebook; no regular posting rhythm; no trending sounds</td></tr>
+    <tr><td><strong>Too little video</strong></td><td>Reels = 13.4% of Facebook views</td><td>Mostly photo posts; videos lack a hook or narration</td></tr>
+    <tr><td><strong>X is not responding</strong></td><td>About 3K views; little reaction</td><td>We post brand images instead of joining conversations</td></tr>
+    <tr><td><strong>Interest is not turning into sales</strong></td><td>“How can I get it?” goes unanswered</td><td>No launch date, no WhatsApp line, no “where to buy”</td></tr>
+    <tr><td><strong>No paid budget to boost what works</strong></td><td>Peaks fade within days</td><td>No budget to promote posts that are already performing well</td></tr>
+   </tbody></table></div>
+  <div class="insight red"><i class="bi bi-bullseye me-2"></i><strong>Root cause in one sentence:</strong> The campaign has succeeded at getting the brand seen. It has not yet built a <strong>loyal following</strong>, and the business has not yet given people a <strong>way to buy</strong>. The next 90 days must close both gaps.</div>
+ </div>
+</div>
+
+<!-- 9.0 -->
+<div class="slide-pane" data-label="9.0 Proposed Way Forward" data-icon="bi-lightbulb">
+ <div class="slide-card">
+  <h2><i class="bi bi-lightbulb-fill me-2"></i>9.0 Proposed Way Forward</h2>
+  <p>We propose to keep the strategy that has worked and add what is missing. Facebook continues to lead, but with a new aim: turning viewers into followers. TikTok is restarted in January with a regular posting schedule. X and Instagram are brought forward in February, using the momentum from Facebook and TikTok.</p>
+
+  <h5 id="s9-1"><span class="sec-num">9.1</span>90‑day plan (December – February)</h5>
+  <div class="table-wrap"><table class="table table-borderless">
+   <thead><tr><th>Phase</th><th>Focus</th><th>Key actions</th></tr></thead>
+   <tbody>
+    <tr><td><span class="badge" style="background:var(--crimson)">December</span></td><td><strong>Facebook: turn viewers into followers</strong></td><td>4–5 posts a week, mostly chai humour and factory people. Every caption ends with a question, a tag prompt or a poll. Invite people who reacted to follow the page. Turn the best photo posts into reels. Festive theme: tea as a gift and for family gatherings.</td></tr>
+    <tr><td><span class="badge" style="background:var(--ink)">January</span></td><td><strong>TikTok: restart</strong></td><td>3 videos a week on fixed days. Two recurring series: “Chai Break with…” (people at work) and “Factory Fridays”. Use trending sounds, reply to comments with videos, and work with 2–3 Nairobi creators. Include spelling variants of our name in captions.</td></tr>
+    <tr><td><span class="badge" style="background:var(--slate)">February</span></td><td><strong>X &amp; Instagram: build up</strong></td><td>X: debates, polls, replies and threads (Section 6.2). Instagram: reels adapted from Facebook and TikTok, Collab posts and carousels. Share our best‑performing content on every platform.</td></tr>
+   </tbody></table></div>
+
+  <h5 id="s9-2"><span class="sec-num">9.2</span>Proposed targets to 28 February 2027</h5>
+  <div class="table-wrap"><table class="table table-borderless">
+   <thead><tr><th>KPI</th><th>Now</th><th>Target</th></tr></thead>
+   <tbody>
+    <tr><td>Total views (FB + TikTok)</td><td>101K</td><td>250K</td></tr>
+    <tr><td>Facebook engagement rate (top posts)</td><td>0.31%</td><td>≥ 1.5%</td></tr>
+    <tr><td>Share of Facebook views from followers</td><td>8.8%</td><td>15%</td></tr>
+    <tr><td>Reels share of Facebook views</td><td>13.4%</td><td>30%</td></tr>
+    <tr><td>TikTok video views</td><td>25.2K</td><td>60K</td></tr>
+    <tr><td>TikTok followers</td><td>298</td><td>1,000</td></tr>
+    <tr><td>Comments answered within 24 hours</td><td>Partial</td><td>100%</td></tr>
+    <tr><td>Sales channel live</td><td>No</td><td>By 15 December 2026</td></tr>
+   </tbody></table></div>
+
+  <h5 id="s9-3"><span class="sec-num">9.3</span>Prioritised action plan</h5>
+  <div class="table-wrap"><table class="table table-borderless">
+   <thead><tr><th>Priority</th><th>Action</th><th>Expected outcome</th></tr></thead>
+   <tbody>
+    <tr><td><span class="badge" style="background:var(--crimson)">Immediate</span></td><td><strong>Product launch date</strong> and an official “where to buy”</td><td>Turn existing demand into sales</td></tr>
+    <tr><td><span class="badge" style="background:var(--crimson)">Immediate</span></td><td><i class="bi bi-whatsapp"></i> <strong>WhatsApp Business line</strong> for orders and questions</td><td>A direct sales channel that our audience already uses</td></tr>
+    <tr><td><span class="badge" style="background:var(--crimson)">Immediate</span></td><td><strong>Approved response on farmer payments</strong></td><td>Protect trust with our farming community</td></tr>
+    <tr><td><span class="badge" style="background:var(--ink)">Short‑term</span></td><td><strong>Small monthly budget to boost posts</strong>, applied only to posts already doing well</td><td>Extend peaks instead of letting them fade</td></tr>
+    <tr><td><span class="badge" style="background:var(--ink)">Short‑term</span></td><td><strong>PR packages &amp; merchandise</strong></td><td>Meet requests, provide giveaways and material for creators</td></tr>
+    <tr><td><span class="badge" style="background:var(--ink)">Short‑term</span></td><td><strong>Nairobi creator partnerships</strong> (TikTok)</td><td>Reach the under‑35 Nairobi audience</td></tr>
+    <tr><td><span class="badge" style="background:var(--slate)">Ongoing</span></td><td><strong>Monthly flavour poll</strong> (ginger request) and a monthly KPI report to management</td><td>Product insight and accountability</td></tr>
+   </tbody></table></div>
+ </div>
+</div>
+
+<!-- 10.0 -->
+<div class="slide-pane" data-label="10.0 Gallery & Evidence" data-icon="bi-images">
+ <div class="slide-card">
+  <h2><i class="bi bi-images me-2"></i>10.0 Gallery: Analytics Evidence &amp; Campaign Visuals</h2>
+  <p class="text-muted">The analytics screenshots and comments behind the figures in this report, with earlier campaign visuals. Click any tile to view it full size with zoom controls.</p>
+  <h5 id="s10-1"><span class="sec-num">10.1</span>Facebook (November 2026)</h5>
+  <div class="gallery-grid" id="galFb"></div>
+  <h5 id="s10-2"><span class="sec-num">10.2</span>TikTok (November 2026)</h5>
+  <div class="gallery-grid" id="galTt"></div>
+  <h5 id="s10-3"><span class="sec-num">10.3</span>Earlier campaign visuals</h5>
+  <div class="gallery-grid" id="galOld"></div>
+  <div class="footer-note">Reporting Period: 24 June 2026 – 22 November 2026 · Ikumbi Tea, KTDA · Murang'a County</div>
+ </div>
+</div>
+
+<!-- 11.0 -->
+<div class="slide-pane" data-label="11.0 Conclusion & Board Requests" data-icon="bi-check2-circle">
+ <div class="slide-card">
+  <h2><i class="bi bi-check2-circle me-2"></i>11.0 Conclusion &amp; Board Requests</h2>
+  <p>Since the August review the campaign has more than doubled its audience. Facebook has become a strong channel, with two posts above 17,500 views in November. The audience has spread across Kenya, from Maragwa to Malindi, and to 11 other countries. And the comments show that the people we reach already value the product.</p>
+  <p>This deeper analysis also shows what remains to be done. The campaign has two distinct audiences that need different approaches. Its viewers are not yet becoming followers. TikTok has been underfed. X needs a conversational approach rather than broadcasting. Above all, demand is building with nowhere for it to go.</p>
+
+  <h5 id="s11-1"><span class="sec-num">11.1</span>Requests to the Board</h5>
+  <div class="mt-2 p-3 rounded-4" style="background:rgba(43,45,66,.06);border-left:4px solid var(--crimson);">
+   <ul class="mb-0" style="list-style:none;padding-left:0">
+    <li class="mb-2"><i class="bi bi-arrow-right-circle-fill me-2" style="color:var(--crimson)"></i><strong>Approve a product launch date</strong> and an official “where to buy”.</li>
+    <li class="mb-2"><i class="bi bi-arrow-right-circle-fill me-2" style="color:var(--crimson)"></i><strong>Provide a WhatsApp Business number</strong> for orders and questions, live by 15 December.</li>
+    <li class="mb-2"><i class="bi bi-arrow-right-circle-fill me-2" style="color:var(--crimson)"></i><strong>Approve a small monthly budget to boost posts</strong> that are already performing well. Amount at the Board's discretion.</li>
+    <li class="mb-2"><i class="bi bi-arrow-right-circle-fill me-2" style="color:var(--crimson)"></i><strong>Provide an approved response</strong> on production costs and farmer payments.</li>
+    <li class="mb-2"><i class="bi bi-arrow-right-circle-fill me-2" style="color:var(--crimson)"></i><strong>Approve PR packages and merchandise</strong> production.</li>
+    <li><i class="bi bi-arrow-right-circle-fill me-2" style="color:var(--crimson)"></i><strong>Note the ginger (“Jinja”) flavour request</strong> for product development.</li>
+   </ul>
+  </div>
+  <p class="mt-3">The audience is in place and the goodwill is real. People are asking for the product by name. With these decisions, the next review can report not only how many people saw Ikumbi Tea, but how many bought it.</p>
+  <div class="footer-note">Reporting Period: 24 June 2026 – 22 November 2026 · Ikumbi Tea, KTDA · Murang'a County</div>
+ </div>
+</div>
+
+<!-- THANK YOU -->
+<div class="slide-pane" data-label="Thank You" data-icon="bi-heart-fill">
+ <div class="slide-card text-center" style="border-left-color:var(--ink);">
+  <i class="bi bi-cup-hot-fill" style="font-size:3.5rem;color:var(--crimson);"></i>
+  <h1 class="cover-title mt-3" style="font-size:3.2rem;">Thank You</h1>
+  <p class="cover-sub mx-auto mt-3 text-start" style="max-width:580px;display:inline-block;">Thank you for your time in reviewing the Ikumbi Tea social media campaign. The audience is growing, the community is proud of its tea, and the next step is to give people a way to buy it.</p>
+  <div class="mt-4 p-3 rounded-4 mx-auto" style="background:rgba(141,153,174,.18);max-width:580px;"><i class="bi bi-calendar-event me-2"></i><strong>Board Meeting:</strong> Wednesday, 25 November 2026 · 8:00 PM</div>
+  <div class="footer-note">Ikumbi Tea · Kenya Tea Development Agency (KTDA) · Murang'a County</div>
+ </div>
+</div>
+
+</div>
+<div class="turn-shade" id="turnShade"></div>
+<div class="spine"></div><div class="page-edge"></div>
+
+<nav class="pager" aria-label="Page navigation">
+ <button class="pg-prev" id="pgPrev" aria-label="Previous page"><i class="bi bi-chevron-left"></i></button>
+ <div class="pg-info"><span>Page <b id="pgNum">1</b> of <span id="pgTot">1</span></span><span class="pg-title" id="pgTitle"></span><div class="pg-bar"><i id="pgBar"></i></div></div>
+ <button class="pg-next" id="pgNext" aria-label="Next page"><span>Next</span><i class="bi bi-chevron-right"></i></button>
+</nav>
+
+<button class="lightbox-nav-btn lightbox-prev" id="lightboxPrev" aria-label="Previous image" style="display:none;"><i class="bi bi-chevron-left"></i></button>
+<div class="lightbox-overlay" id="lightboxOverlay">
+ <div class="lightbox-content">
+  <button class="lightbox-close" id="lightboxClose" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+  <div class="lightbox-image-wrapper" id="lightboxImageWrapper"><img id="lightboxImg" src="" alt=""></div>
+  <div class="lightbox-label" id="lightboxLabel"></div>
+  <a class="lightbox-view-account" id="lightboxViewAccount" href="#" target="_blank" rel="noopener"><span>View Account</span><i class="bi bi-arrow-right"></i></a>
+  <div class="lightbox-controls">
+   <button onclick="zoomLightboxOut()" title="Zoom Out"><i class="bi bi-dash-circle"></i></button>
+   <span class="zoom-level" id="lightboxZoomLevel">100%</span>
+   <button onclick="zoomLightboxIn()" title="Zoom In"><i class="bi bi-plus-circle"></i></button>
+   <button onclick="resetLightboxZoom()" title="Reset Zoom"><i class="bi bi-arrow-counterclockwise"></i></button>
+  </div>
+ </div>
+</div>
+<button class="lightbox-nav-btn lightbox-next" id="lightboxNext" aria-label="Next image" style="display:none;"><i class="bi bi-chevron-right"></i></button>
+
+<script>
+(function(){
+ var msgs=['Preparing board report…','Brewing the analytics…','Mapping the audience…','Reading the comments…','Almost ready to present…'];
+ var st=document.getElementById('loaderStatus'),fill=document.getElementById('loaderBarFill'),pc=document.getElementById('loaderPercent'),ld=document.getElementById('teaLoader');
+ var D=3200,s=performance.now(),mi=0;
+ function tick(n){var e=n-s,p=Math.min(100,e/D*100);fill.style.width=p+'%';pc.textContent=Math.round(p)+'%';var t=Math.min(msgs.length-1,Math.floor(e/D*msgs.length));if(t!==mi){mi=t;st.textContent=msgs[t]}
+  if(e<D)requestAnimationFrame(tick);else{st.textContent='Report ready';setTimeout(function(){ld.classList.add('loader-hide');setTimeout(function(){ld.style.display='none'},650)},400)}}
+ requestAnimationFrame(tick);
+})();
+
+const accessToggle=document.getElementById('accessToggle'),accessPanel=document.getElementById('accessPanel');
+accessToggle.addEventListener('click',e=>{e.stopPropagation();accessPanel.classList.toggle('open')});
+document.addEventListener('click',e=>{if(!accessPanel.contains(e.target)&&e.target!==accessToggle)accessPanel.classList.remove('open')});
+let zoomLevel=100;
+function updateZoom(){document.querySelectorAll('.slide-card').forEach(c=>c.style.zoom=zoomLevel/100);document.getElementById('zoomDisplay').textContent=zoomLevel+'%'}
+function zoomIn(){if(zoomLevel<160){zoomLevel+=10;updateZoom()}}
+function zoomOut(){if(zoomLevel>60){zoomLevel-=10;updateZoom()}}
+function resetZoom(){zoomLevel=100;updateZoom()}
+function toggleDarkMode(){document.body.classList.toggle('dark-mode')}
+function toggleContrast(){document.body.classList.toggle('high-contrast')}
+
+/* book */
+const slides=[...document.querySelectorAll('.slide-pane')],N=slides.length,reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let cur=0,busy=false;
+const wheel=document.getElementById('wheelNav'),tip=document.getElementById('navTip'),toc=document.getElementById('tocList'),dl=document.getElementById('drawerList');
+slides.forEach((s,i)=>{
+ const label=s.dataset.label,icon=s.dataset.icon;
+ const it=document.createElement('div');it.className='nav-item';it.setAttribute('role','button');it.tabIndex=0;it.setAttribute('aria-label',label);it.innerHTML='<i class="bi '+icon+'"></i>';
+ it.addEventListener('click',()=>go(i));it.addEventListener('keydown',e=>{if(e.key==='Enter')go(i)});
+ it.addEventListener('mouseenter',()=>{const r=it.getBoundingClientRect();tip.textContent=label;tip.style.top=(r.top+r.height/2-14)+'px';tip.classList.add('show')});
+ it.addEventListener('mouseleave',()=>tip.classList.remove('show'));wheel.appendChild(it);
+ if(i>0){const li=document.createElement('li');li.innerHTML='<i class="bi '+icon+'"></i> '+label+' <span>'+(i+1)+'</span>';li.addEventListener('click',()=>go(i));toc.appendChild(li)}
+ const ch=document.createElement('div');ch.className='dr-ch';ch.dataset.i=i;
+ const b=document.createElement('button');b.innerHTML='<i class="bi '+icon+'"></i><span>'+label+'</span>';b.addEventListener('click',()=>{closeDrawer();go(i)});ch.appendChild(b);
+ const subs=s.querySelectorAll('h5[id]');if(subs.length){const w=document.createElement('div');w.className='dr-subs';
+  subs.forEach(h=>{const sb=document.createElement('button');sb.textContent=h.textContent;sb.addEventListener('click',()=>{closeDrawer();go(i,h.id)});w.appendChild(sb)});ch.appendChild(w)}
+ dl.appendChild(ch);
+});
+document.getElementById('pgTot').textContent=N;
+const drawer=document.getElementById('drawer'),scrim=document.getElementById('scrim'),menuBtn=document.getElementById('menuBtn');
+function openDrawer(){drawer.classList.add('open');scrim.classList.add('open');drawer.setAttribute('aria-hidden','false');menuBtn.setAttribute('aria-expanded','true');const a=dl.querySelector('.dr-ch.active');if(a)a.scrollIntoView({block:'center'})}
+function closeDrawer(){drawer.classList.remove('open');scrim.classList.remove('open');drawer.setAttribute('aria-hidden','true');menuBtn.setAttribute('aria-expanded','false')}
+menuBtn.addEventListener('click',()=>drawer.classList.contains('open')?closeDrawer():openDrawer());
+scrim.addEventListener('click',closeDrawer);document.getElementById('drawerClose').addEventListener('click',closeDrawer);
+document.getElementById('drawerSearch').addEventListener('input',e=>{const q=e.target.value.trim().toLowerCase();
+ dl.querySelectorAll('.dr-ch').forEach(ch=>{const t=ch.querySelector('span').textContent.toLowerCase();let any=!q||t.includes(q);
+  ch.querySelectorAll('.dr-subs button').forEach(sb=>{const h=!q||t.includes(q)||sb.textContent.toLowerCase().includes(q);sb.style.display=h?'':'none';if(h)any=true});ch.style.display=any?'':'none'})});
+
+function setCurrent(i,anchor){
+ slides.forEach((s,k)=>{s.classList.remove('under','turning','turn-out','turn-in');s.classList.toggle('active-slide',k===i)});
+ cur=i;const s=slides[i];
+ if(anchor){const el=document.getElementById(anchor);s.scrollTop=0;requestAnimationFrame(()=>{s.scrollTo({top:el.getBoundingClientRect().top-s.getBoundingClientRect().top+s.scrollTop-16,behavior:reduceMotion?'auto':'smooth'})});
+  if(el.animate)el.animate([{color:'#D90429'},{color:''}],{duration:1800})}
+ wheel.querySelectorAll('.nav-item').forEach((n,k)=>n.classList.toggle('active',k===i));
+ dl.querySelectorAll('.dr-ch').forEach(c=>c.classList.toggle('active',+c.dataset.i===i));
+ document.getElementById('pgNum').textContent=i+1;document.getElementById('pgTitle').textContent=s.dataset.label;
+ document.getElementById('pgBar').style.width=(i/(N-1)*100)+'%';
+ document.getElementById('pgPrev').disabled=i===0;document.getElementById('pgNext').disabled=i===N-1;
+ try{history.replaceState(null,'','#page'+(i+1))}catch(e){}
+ window.dispatchEvent(new Event('resize'));
+}
+function go(t,anchor){
+ if(t<0||t>=N)return;
+ if(t===cur){if(anchor)setCurrent(t,anchor);return}
+ if(busy)return;
+ const from=slides[cur],to=slides[t],fwd=t>cur,shade=document.getElementById('turnShade');
+ if(reduceMotion){setCurrent(t,anchor);return}
+ busy=true;to.scrollTop=0;
+ const done=()=>{busy=false;shade.classList.remove('on');setCurrent(t,anchor)};
+ shade.classList.remove('on');void shade.offsetWidth;
+ if(fwd){to.classList.add('under');from.classList.remove('active-slide');from.classList.add('turning','turn-out');shade.classList.add('on');
+  from.addEventListener('animationend',function h(e){if(e.target!==from)return;from.removeEventListener('animationend',h);done()})}
+ else{from.classList.remove('active-slide');from.classList.add('under');to.classList.add('turning','turn-in');
+  to.addEventListener('animationend',function h(e){if(e.target!==to)return;to.removeEventListener('animationend',h);done()})}
+}
+document.getElementById('pgNext').addEventListener('click',()=>go(cur+1));
+document.getElementById('pgPrev').addEventListener('click',()=>go(cur-1));
+document.addEventListener('keydown',e=>{
+ if(document.getElementById('lightboxOverlay').classList.contains('open'))return;
+ if(e.target.matches('input')){if(e.key==='Escape')closeDrawer();return}
+ if(e.key==='Escape')closeDrawer();
+ else if(e.key==='ArrowRight'||e.key==='PageDown'){e.preventDefault();go(cur+1)}
+ else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(cur-1)}
+ else if(e.key==='m'||e.key==='M'){drawer.classList.contains('open')?closeDrawer():openDrawer()}
+});
+let tsx=0,tsy=0;
+document.getElementById('book').addEventListener('touchstart',e=>{tsx=e.touches[0].clientX;tsy=e.touches[0].clientY},{passive:true});
+document.getElementById('book').addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tsx,dy=e.changedTouches[0].clientY-tsy;if(Math.abs(dx)>80&&Math.abs(dx)>Math.abs(dy)*1.6)go(dx<0?cur+1:cur-1)},{passive:true});
+try{history.scrollRestoration='manual'}catch(e){}
+(function(){const m=location.hash.match(/^#page(\d+)$/);setCurrent(m?Math.min(N-1,Math.max(0,+m[1]-1)):0)})();
+
+/* gallery */
+const ACCOUNT_LINKS={facebook:'https://www.facebook.com/profile.php?id=61591422630918',tiktok:'https://www.tiktok.com/@ikumbitea',instagram:'',x:'https://x.com/ikumbitea'};
+function addGal(id,items){const g=document.getElementById(id);items.forEach(([src,label,pf,icon])=>{
+ g.insertAdjacentHTML('beforeend','<div class="gallery-card"><div class="gallery-item" data-platform="'+pf+'" data-img="'+src+'" data-label="'+label+'"><img src="'+src+'" alt="'+label+'" loading="lazy"><button class="gallery-zoom-btn" aria-label="Zoom"><i class="bi bi-zoom-in"></i></button><div class="gallery-caption"><i class="bi '+icon+'"></i><span>'+label+'</span></div></div></div>')})}
+const F=n=>'Facebook/Screenshot%202026-11-23%20'+n+'.png',T=n=>'Tiktok/Screenshot%202026-11-23%20'+n+'.png';
+addGal('galFb',[[F(131046),'Views: 75,801 (1 Jan – 22 Nov)','facebook','bi-graph-up'],[F(131059),'3-sec views & watch time','facebook','bi-stopwatch'],[F(131109),'Views by content type','facebook','bi-collection'],[F(131133),'Followers vs non-followers','facebook','bi-people'],[F(131143),'Recent posts','facebook','bi-grid'],[F(131456),'Recent posts (cont.)','facebook','bi-grid'],[F(131706),'“I work so I can buy chai”: 18,550 views','facebook','bi-cup-hot'],[F(132257),'Factory album: 17.8K views','facebook','bi-images'],[F(131637),'Age & gender','facebook','bi-person-lines-fill'],[F(132502),'How people find our content','facebook','bi-signpost'],[F(132516),'Countries','facebook','bi-globe2'],[F(132528),'Towns & cities','facebook','bi-geo-alt'],[F(131738),'Comments (1)','facebook','bi-chat-quote'],[F(131802),'Comments (2)','facebook','bi-chat-quote'],[F(131915),'Comments (3)','facebook','bi-chat-quote']]);
+addGal('galTt',[[T(133503),'Key metrics: 25.2K views','tiktok','bi-graph-up'],[T(133551),'Traffic sources & search','tiktok','bi-search'],[T(133614),'Gender','tiktok','bi-gender-ambiguous'],[T(133623),'Age','tiktok','bi-person-lines-fill'],[T(133639),'Countries','tiktok','bi-globe2'],[T(133719),'Cities (view 1)','tiktok','bi-geo-alt'],[T(133812),'Cities (view 2)','tiktok','bi-geo-alt']]);
+addGal('galOld',[['img/FACEBOOK01.png','Facebook Page','facebook','bi-facebook'],['img/TIKTOK01.png','TikTok Profile','tiktok','bi-tiktok'],['img/X02.png','X (Twitter) Profile','x','bi-twitter-x'],['img/FACEBOOKCONTENT.png','Campaign Moments','facebook','bi-cup-hot'],['img/TIKCONTENT.png','TikTok Content','tiktok','bi-camera-video'],['img/FACEBOOK.png','Facebook Dashboard (July)','facebook','bi-graph-up']]);
+const lbO=document.getElementById('lightboxOverlay'),lbI=document.getElementById('lightboxImg'),lbL=document.getElementById('lightboxLabel'),lbA=document.getElementById('lightboxViewAccount'),lbZ=document.getElementById('lightboxZoomLevel'),lbP=document.getElementById('lightboxPrev'),lbN=document.getElementById('lightboxNext');
+let gItems=[],gIdx=0,lz=1;
+function lzApply(){lbI.style.transform='scale('+lz+')';lbZ.textContent=Math.round(lz*100)+'%'}
+function zoomLightboxIn(){lz=Math.min(4,lz+.25);lzApply()}function zoomLightboxOut(){lz=Math.max(.5,lz-.25);lzApply()}function resetLightboxZoom(){lz=1;lzApply()}
+function showG(i){const it=gItems[i];gIdx=i;lbI.src=it.dataset.img;lbI.alt=it.dataset.label;lbL.textContent=it.dataset.label;const u=ACCOUNT_LINKS[it.dataset.platform];lbA.style.display=u?'inline-flex':'none';if(u)lbA.href=u;resetLightboxZoom()}
+function openG(it){gItems=[...it.closest('.gallery-grid').querySelectorAll('.gallery-item')];showG(gItems.indexOf(it));lbO.classList.add('open');lbP.style.display=lbN.style.display='flex'}
+function closeG(){lbO.classList.remove('open');lbP.style.display=lbN.style.display='none'}
+document.querySelectorAll('.gallery-item').forEach(it=>it.addEventListener('click',()=>openG(it)));
+document.getElementById('lightboxClose').addEventListener('click',closeG);lbO.addEventListener('click',e=>{if(e.target===lbO)closeG()});
+lbP.addEventListener('click',()=>showG((gIdx-1+gItems.length)%gItems.length));lbN.addEventListener('click',()=>showG((gIdx+1)%gItems.length));
+document.getElementById('lightboxImageWrapper').addEventListener('wheel',e=>{e.preventDefault();e.deltaY<0?zoomLightboxIn():zoomLightboxOut()},{passive:false});
+document.addEventListener('keydown',e=>{if(!lbO.classList.contains('open'))return;if(e.key==='Escape')closeG();if(e.key==='ArrowLeft')lbP.click();if(e.key==='ArrowRight')lbN.click()});
+
+/* charts */
+(function(){
+ if(!window.Chart)return;
+ Chart.defaults.font.family="'Quicksand',sans-serif";Chart.defaults.font.weight=600;Chart.defaults.color='#4a4f66';Chart.defaults.maintainAspectRatio=false;
+ Chart.defaults.plugins.legend.labels.usePointStyle=true;Chart.defaults.plugins.legend.labels.boxWidth=8;
+ const INK='#2B2D42',RED='#EF233C',CRIM='#D90429',SL='#8D99AE',SL2='#c3cad6',FB=INK,TT=RED;
+ const grid={color:'rgba(43,45,66,.08)'};
+ const pct=v=>v+'%',k=v=>v>=1000?(v/1000)+'K':v;
+ const hbar=(id,labels,data,color,fmt,max)=>new Chart(document.getElementById(id),{type:'bar',data:{labels,datasets:[{data,backgroundColor:color,borderRadius:4,barPercentage:.7}]},
+  options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.parsed.x)}}},scales:{x:{beginAtZero:true,max,grid,ticks:{callback:fmt}},y:{grid:{display:false}}}}});
+ const donut=(id,labels,data,colors)=>new Chart(document.getElementById(id),{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderColor:'#fff',borderWidth:2}]},
+  options:{cutout:'58%',plugins:{legend:{position:'right'},tooltip:{callbacks:{label:c=>c.label+': '+c.parsed+'%'}}}}});
+ new Chart(document.getElementById('progressChart'),{type:'line',data:{labels:['First 28 days (late Jul)','Board report (25 Aug)','Today (22 Nov)'],datasets:[
+  {label:'Facebook',data:[3521,19000,75801],borderColor:FB,backgroundColor:'rgba(43,45,66,.08)',fill:true,tension:.3,pointRadius:5,borderWidth:3},
+  {label:'TikTok',data:[6700,21000,25200],borderColor:TT,backgroundColor:'rgba(239,35,60,.08)',fill:true,tension:.3,pointRadius:5,borderWidth:3}]},
+  options:{plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y.toLocaleString()+' views'}}},scales:{y:{beginAtZero:true,grid,ticks:{callback:k}},x:{grid:{display:false}}}}});
+ new Chart(document.getElementById('gainChart'),{type:'bar',data:{labels:['To late Jul','Late Jul → Aug','Aug → Nov'],datasets:[
+  {label:'Facebook',data:[3521,15479,56801],backgroundColor:FB,borderRadius:4},{label:'TikTok',data:[6700,14300,4200],backgroundColor:TT,borderRadius:4}]},
+  options:{plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': +'+c.parsed.y.toLocaleString()}}},scales:{y:{beginAtZero:true,grid,ticks:{callback:k}},x:{grid:{display:false}}}}});
+ new Chart(document.getElementById('fbPeakChart'),{type:'bar',data:{labels:['Jul (launch)','Aug–Sep','Mid-Oct','Nov'],datasets:[{data:[1200,1300,7000,18500],backgroundColor:[SL,SL,INK,CRIM],borderRadius:4}]},
+  options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'~'+c.parsed.y.toLocaleString()+' views in a day'}}},scales:{y:{beginAtZero:true,grid,ticks:{callback:k}},x:{grid:{display:false}}}}});
+ donut('fbFollowChart',['Non-followers','Followers'],[91.2,8.8],[INK,RED]);
+ donut('fbTypeChart',['Photo','Multi-photo','Reel','Other'],[56.6,29.8,13.4,.1],[INK,SL,RED,SL2]);
+ hbar('fbTrafficChart',['Feed','Reels','Our page','Other','Groups','Stories'],[81.8,13.5,2.8,1.5,.3,0],INK,pct,100);
+ hbar('fbPostsChart',['Chai meme (2 Nov)','Factory album (20 Nov)','Withering reel (15 Nov)','Team photo (20 Nov)','Breakfast King ad (28 Oct)','Tasting cups (4 Nov)'],[18550,17754,5558,4831,3599,1272],[CRIM,CRIM,INK,INK,SL,SL],v=>v.toLocaleString());
+ new Chart(document.getElementById('engageChart'),{type:'bar',data:{labels:['TikTok (all videos)','Facebook (17.8K album)'],datasets:[{data:[5.67,.31],backgroundColor:[TT,FB],borderRadius:4,barPercentage:.55}]},
+  options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y+'% engagement'}}},scales:{y:{beginAtZero:true,grid,ticks:{callback:pct}},x:{grid:{display:false}}}}});
+ new Chart(document.getElementById('ttCompareChart'),{type:'bar',data:{labels:['Likes','Comments','Shares'],datasets:[{label:'Aug 2026',data:[790,152,35],backgroundColor:SL,borderRadius:4},{label:'22 Nov 2026',data:[1200,186,44],backgroundColor:TT,borderRadius:4}]},
+  options:{scales:{y:{beginAtZero:true,grid},x:{grid:{display:false}}}}});
+ donut('ttTrafficChart',['For You','Search','Personal profile','Following','Sound'],[89.1,6.5,4.1,.4,0],[INK,RED,SL,SL2,'#e6eaef']);
+ hbar('ttSearchChart',['kisyet tea factory in bomet','kisoro tea factory','mananasi ukulima','nkumbi','kyamuhunga tea factory'],[1.4,.7,.7,.7,.7],[RED,INK,INK,INK,INK],pct,1.6);
+ new Chart(document.getElementById('ageChart'),{type:'bar',data:{labels:['18–24','25–34','35–44','45–54','55+'],datasets:[{label:'Facebook',data:[7.1,25.1,28.2,21.2,18.4],backgroundColor:FB,borderRadius:4},{label:'TikTok',data:[32.2,43.8,18.5,3.1,2.4],backgroundColor:TT,borderRadius:4}]},
+  options:{plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y+'%'}}},scales:{y:{beginAtZero:true,max:50,grid,ticks:{callback:pct}},x:{grid:{display:false}}}}});
+ donut('genderChart',['Male','Female'],[57,43],[INK,RED]);
+ hbar('fbTownChart',['Maragwa','Nairobi','Thika','Kericho','Nandi','Other'],[53.4,22.7,6.8,3.4,3.4,10.2],[CRIM,INK,INK,SL,SL,SL2],pct,60);
+ hbar('ttCityChart',['Nairobi','Kisumu','Malindi','Mombasa','Loglogo','Other'],[81.8,5.8,5.6,.8,.8,5],[CRIM,INK,INK,SL,SL,SL2],pct,90);
+ hbar('fbCountryChart',['Kenya','Pakistan','Saudi Arabia','United States'],[97.2,1.4,.9,.5],[INK,RED,RED,RED],pct,100);
+ hbar('ttCountryChart',['Kenya','Uganda','Qatar','Others'],[92.9,1.4,1.1,4.6],[INK,RED,RED,SL],pct,100);
+})();
+</script>
+
+<script>
+/* jet maps */
+(function(){
+var rm=matchMedia('(prefers-reduced-motion:reduce)').matches;
+var $=function(s){return document.querySelector(s)};
+function pp(s){return s.trim().split(/\s+/).map(function(t){var a=t.split(',');return[+a[0],+a[1]]})}
+function gc(a,b,n){var r=Math.PI/180,v=function(p){var x=p[0]*r,y=p[1]*r;return[Math.cos(y)*Math.cos(x),Math.cos(y)*Math.sin(x),Math.sin(y)]},A=v(a),B=v(b),d=Math.acos(Math.max(-1,Math.min(1,A[0]*B[0]+A[1]*B[1]+A[2]*B[2]))),o=[],pl=null;if(d<1e-6)d=1e-6;for(var i=0;i<=n;i++){var t=i/n,s1=Math.sin((1-t)*d)/Math.sin(d),s2=Math.sin(t*d)/Math.sin(d),x=s1*A[0]+s2*B[0],y=s1*A[1]+s2*B[1],z=s1*A[2]+s2*B[2],lo=Math.atan2(y,x)/r,la=Math.atan2(z,Math.sqrt(x*x+y*y))/r;if(pl!==null){while(lo-pl>180)lo-=360;while(lo-pl<-180)lo+=360}pl=lo;o.push([lo,la])}return o}
+function mk(c){
+var m=$(c.svg),tb=$(c.tabs),inf=$(c.info),box=m.parentNode,RT=[],cur='all',vb={x:0,y:0,w:c.W,h:c.H},tw,u=1,raf=0;
+function asp(){var r=box.getBoundingClientRect();return r.width>20&&r.height>20?r.width/r.height:c.W/c.H}
+function wid(){var r=m.getBoundingClientRect();return r.width>20?r.width:600}
+function D(s){return'M'+pp(s).map(function(q){var p=c.P(q);return p[0].toFixed(1)+' '+p[1].toFixed(1)}).join('L')+'Z'}
+function L(a){return a.map(function(p){return p[0].toFixed(1)+' '+p[1].toFixed(1)}).join('L')}
+c.dests.forEach(function(d){var pts=gc(c.o,d.ll,50).map(c.P),len=0;for(var i=1;i<pts.length;i++)len+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);RT.push({d:d,rg:d.rg,pts:pts,sp:1/(5+len/c.sd),p:'M'+L(pts)})});
+var g='';for(var lo=c.gb[0];lo<=c.gb[1];lo+=c.gs[0])g+='M'+c.P([lo,c.gb[3]]).join(' ')+'L'+c.P([lo,c.gb[2]]).join(' ');
+for(var la=c.gb[2];la<=c.gb[3];la+=c.gs[1]){var a=c.P([c.gb[0],la]),b=c.P([c.gb[1],la]);g+='M'+a.join(' ')+'L'+b.join(' ')}
+var s='<defs><path id="'+c.id+'jet" d="M0,-7 L1.2,-2 L7,1 L7,2.5 L1.2,1 L1,5 L3,6.5 L3,7.5 L0,6.8 L-3,7.5 L-3,6.5 L-1,5 L-1.2,1 L-7,2.5 L-7,1 L-1.2,-2Z"/></defs><path class="m-g" d="'+g+'"/>';
+s+='<path class="'+(c.kenya?'m-k':'m-l')+'" d="'+c.land.map(D).join('')+'"/>';
+if(c.water)s+='<path class="m-w" d="'+c.water.map(D).join('')+'"/>';
+if(c.towns)c.towns.forEach(function(t){var p=c.P(t[1]);s+='<circle class="m-c" cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="3"/><text class="m-ct" x="'+(p[0]+7)+'" y="'+(p[1]+4)+'" font-size="15" stroke-width="3">'+t[0]+'</text>'});
+RT.forEach(function(r,i){var e=r.pts[r.pts.length-1];r.e=e;s+='<path class="m-r" id="'+c.id+'r'+i+'" d="'+r.p+'"/><path class="m-f" id="'+c.id+'f'+i+'" d="'+r.p+'"/><circle class="m-p" id="'+c.id+'u'+i+'" cx="'+e[0].toFixed(1)+'" cy="'+e[1].toFixed(1)+'" r="5"/><circle class="m-d" id="'+c.id+'d'+i+'" cx="'+e[0].toFixed(1)+'" cy="'+e[1].toFixed(1)+'" r="3"/><text class="m-t" id="'+c.id+'x'+i+'">'+r.d.n+(r.d.s?' · '+r.d.s:'')+'</text>'});
+var oo=c.P(c.o);s+='<circle id="'+c.id+'og" cx="'+oo[0]+'" cy="'+oo[1]+'" r="4" fill="#D90429" stroke="#fff" stroke-width="2.5"/><text class="m-t on" id="'+c.id+'ot" x="'+(oo[0]+8)+'" y="'+(oo[1]+16)+'">'+c.oname+'</text>';
+RT.forEach(function(r,i){s+='<use href="#'+c.id+'jet" class="m-j" id="'+c.id+'j'+i+'a"/><use href="#'+c.id+'jet" class="m-j" id="'+c.id+'j'+i+'b"/>'});
+m.innerHTML=s;
+RT.forEach(function(r,i){var q=function(k){return $('#'+c.id+k+i)};r.re=q('r');r.f=q('f');r.dt=q('d');r.pu=q('u');r.tx=q('x');r.pl=[$('#'+c.id+'j'+i+'a'),$('#'+c.id+'j'+i+'b')]});
+function target(rg){var A=asp(),w,h;
+ if(rg==='all'){if(c.W/c.H>A){w=c.W;h=w/A}else{h=c.H;w=h*A}return{x:(c.W-w)/2,y:(c.H-h)/2,w:w,h:h}}
+ var x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;RT.forEach(function(r){if(r.rg!==rg)return;r.pts.forEach(function(p){x0=Math.min(x0,p[0]);x1=Math.max(x1,p[0]);y0=Math.min(y0,p[1]);y1=Math.max(y1,p[1])})});
+ w=(x1-x0)*1.35+c.pad;h=(y1-y0)*1.45+c.pad;if(w/h<A)w=h*A;else h=w/A;
+ return{x:(x0+x1)/2-w/2,y:(y0+y1)/2-h/2,w:w,h:h}}
+function apply(){m.setAttribute('viewBox',vb.x.toFixed(1)+' '+vb.y.toFixed(1)+' '+vb.w.toFixed(1)+' '+vb.h.toFixed(1));u=vb.w/wid();
+ $('#'+c.id+'og').setAttribute('r',4.5*u);var ot=$('#'+c.id+'ot');ot.style.fontSize=(11*u)+'px';ot.style.strokeWidth=(3*u)+'px';ot.setAttribute('x',c.P(c.o)[0]+8*u);ot.setAttribute('y',c.P(c.o)[1]+(c.oy||16)*u);
+ RT.forEach(function(r){var br=r.d.br||3.5;r.dt.setAttribute('r',br*u);r.pu.setAttribute('r',(br+2)*u);r.tx.style.fontSize=(11*u)+'px';r.tx.style.strokeWidth=(3*u)+'px';r.tx.setAttribute('x',r.e[0]+(br+5+(r.d.dx||0))*u);r.tx.setAttribute('y',r.e[1]+(4+(r.d.dy||0))*u)})}
+function tween(t,inst){var f={x:vb.x,y:vb.y,w:vb.w,h:vb.h},t0=null;cancelAnimationFrame(tw);if(inst||rm){vb=t;apply();return}
+ function stp(n){t0=t0||n;var k=Math.min((n-t0)/1300,1),e=1-Math.pow(1-k,3);vb={x:f.x+(t.x-f.x)*e,y:f.y+(t.y-f.y)*e,w:f.w+(t.w-f.w)*e,h:f.h+(t.h-f.h)*e};apply();if(k<1)tw=requestAnimationFrame(stp)}tw=requestAnimationFrame(stp)}
+var keys=Object.keys(c.R);
+keys.forEach(function(k){var b=document.createElement('button');b.type='button';b.setAttribute('role','tab');b.id=c.id+'t'+k;b.textContent=c.R[k].name;b.onclick=function(){show(k)};tb.appendChild(b)});
+function show(rg){cur=rg;keys.forEach(function(k){$('#'+c.id+'t'+k).setAttribute('aria-selected',k===rg)});
+ RT.forEach(function(r){var on=rg==='all'||r.rg===rg;r.on=on;['re','f','dt','pu'].forEach(function(p){r[p].classList.toggle('on',on)});r.tx.classList.toggle('on',on&&(rg!=='all'||!r.d.hideAll))});
+ tween(target(rg));
+ var R=c.R[rg],li=c.dests.filter(function(d){return rg==='all'||d.rg===rg}).map(function(d){return'<li>'+d.n+'<span>'+(d.s||'&lt;1%')+'</span></li>'}).join('');
+ inf.innerHTML='<b>'+R.t+'</b><p>'+R.p+'</p><ul>'+li+'</ul>'+(c.foot?'<div class="gm-foot">'+c.foot+'</div>':'')}
+function frame(now){var s=18/14*u,T=now/1000;RT.forEach(function(r){var n=r.pts.length-1;r.pl.forEach(function(e,j){var vis=r.on&&(j===0||cur!=='all');if(!vis){e.style.opacity=0;return}
+ var t=(T*r.sp+(rm?.5:0)+j*.5)%1,q=t*n,i0=Math.min(Math.floor(q),n-1),f=q-i0,a=r.pts[i0],b=r.pts[i0+1],x=a[0]+(b[0]-a[0])*f,y=a[1]+(b[1]-a[1])*f,ang=Math.atan2(b[1]-a[1],b[0]-a[0])*180/Math.PI+90;
+ e.setAttribute('transform','translate('+x.toFixed(1)+' '+y.toFixed(1)+') rotate('+ang.toFixed(1)+') scale('+s.toFixed(3)+')');e.style.opacity=Math.min(1,t*10,(1-t)*10).toFixed(2)})});
+ if(!rm)raf=requestAnimationFrame(frame)}
+var rt;addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){tween(target(cur),1)},120)});
+show('all');vb=target('all');apply();if(!rm)raf=requestAnimationFrame(frame);else frame(0)}
+
+var K=1000/360;
+var W_LAND=["-17,21 -13,27 -9.5,30.5 -6,35.8 10,37 11,33 20,30.5 32,31.3 34,27 37,20 43,12.5 51,12 51,10.5 46,2 41,-2 39,-8 40.5,-15 35,-20 35,-24 32,-29 27,-34 20,-34.8 18,-30 14.5,-22 12,-15 13,-9 9,-1 9.5,4 5,6 -2,5 -8,4.5 -13,8 -17,14.5",
+"-9,37 -9,43 -2,43.5 -1.5,46 -4.5,48.5 2,51 8,54 8,57 10.5,57.5 11,54 20,54.5 21,57 24,59 30,60 22,60.5 21,65 25,65.5 18,63 17,61 19,59.5 16,56 12.5,56 10.5,59.5 5,59 5,62 14,67 20,70 30,70.5 40,67 44,68.5 60,69.5 70,73 80,73.5 105,77.5 113,74 130,71 150,71.5 170,70 180,68.9 180,65 170,60 163,59.8 162,55 156,51 156,57.5 160,61 150,59.5 140,57.5 137,54.5 141,52 140,48 135,43.5 130,42.3 129.5,37 126.5,34.5 126.5,38 122,40.4 119,39 121,37.5 119,35 122,31 121,28 117,24 111,21.5 108,21.5 106,19 108,16 109,12 105,8.6 104.8,10.2 101,13 99.8,11 100.5,7 103.5,2 101,3 98.5,8 98.5,13 94.5,16 92,21 87,21.5 85,19.5 80,15 80,10 77.5,8 74,15 72.8,19 72.7,21 69,22.3 66.5,25.4 57.5,25.6 56.5,27 51,28.8 48,30 50.5,26 51.5,25.2 52.6,24.2 56,26 56.8,24 59.8,22.5 57.8,19 52,16 45,12.8 43,12.7 42.7,15.7 39,21.5 35,28 34.2,27.8 32.6,29.9 32.3,31.3 35,33 36,36 30,36.5 27,37 26.4,38.5 26,40.8 23,40.5 24,37.7 22.5,36.4 21,38 19.5,41 18.5,42.4 14.5,45.2 13.7,45.6 12.3,44.4 16,41.9 18.5,40.1 16,38 15.7,40 12.4,41.8 10.5,42.9 8.9,44.4 3.1,43.1 0.8,40.8 -0.9,37.6 -5.4,36.1",
+"-168,65.6 -162,70.3 -141,69.7 -128,70.2 -115,68 -98,68 -94.5,71.9 -86,69.5 -81,67 -87,64 -94,59 -92.5,57 -85,55.3 -82,53 -79.5,51.5 -78,56 -78,62 -73,62 -69.5,59 -65.5,60.3 -61.5,56.5 -55.7,52.2 -60,50.2 -67,49 -64,48.8 -62,46.2 -65.8,43.6 -70,43.6 -70,41.8 -74,40.6 -76,37 -75.5,35.2 -80,32.5 -81,30 -80,26 -81.1,25.1 -82.8,27.8 -84,30 -88,30.2 -91,29.3 -95,29.2 -97.4,25.9 -97.8,22.3 -96,19 -94,18.2 -91,19 -90.3,21 -87,21.5 -88,17.4 -87.5,15.8 -83.3,15 -83.7,10.9 -81.5,9 -79.5,9.6 -77.4,8.6 -79,8 -80.5,7.4 -83,8 -85.7,10 -87.7,13.1 -91.5,14 -95,16.2 -99.9,16.8 -105.4,20.2 -106.4,23.2 -109.5,25.8 -112.5,30 -114.8,31.7 -112.3,27.3 -109.8,22.9 -112,24.8 -115.8,29.8 -117.2,32.7 -120.5,34.5 -122.5,37.5 -124.4,40.4 -124,46.2 -124.7,48.4 -123.2,49.3 -127.5,51 -130.3,54.3 -134,58 -141,59.9 -148,60 -152,60.8 -157,58.5 -162,55 -165,54.7 -162,58.5 -165,62.5 -161.5,64.4 -166,64.5",
+"-77.4,8.6 -71.3,12.4 -64,10.6 -60.8,8.6 -55,5.9 -51,4 -50,0 -44.3,-2.5 -38.5,-3.7 -35,-6 -35.5,-9.5 -38.5,-13 -39,-17.7 -41,-22 -45.5,-23.8 -48.5,-26 -50,-31 -56,-34.9 -57,-36 -62,-39 -65,-41 -65,-45 -67.5,-46 -69,-52 -66,-54.9 -71.5,-54 -75,-50 -74,-43.5 -73.5,-37 -71.5,-30 -70.4,-23.6 -70.3,-18.5 -77,-12 -81,-5 -80,-2.5 -80,0.5 -77.5,6",
+"142.5,-10.7 146,-17 149,-21 153,-27 151,-34 150,-37 146,-39 141,-38.4 138,-35 135.9,-34.7 131,-31.5 124,-33.5 117.9,-35 115,-34.4 114,-28.8 114,-21.8 122,-18 126.9,-13.8 131,-12.5 136.9,-12.2 135.5,-15 140,-17.5 141.7,-12.5",
+"-5.7,50.1 1.4,51.2 0.3,53.5 -2,57.5 -5,58.6 -6,56.5 -3,54.9 -4.6,52.8 -5.2,51.7","-6,52.2 -6.1,53.5 -5.7,54.5 -7.5,55.2 -10,54.2 -9.8,53 -10.3,51.8 -8.5,51.6",
+"130.9,34 135.5,35.6 137,37 139.5,38.5 141.5,41.3 142,39.5 140.8,35.7 136.9,34.6 135.5,33.5 132.5,34.2","49.3,-12 50.2,-15.4 48.3,-21.2 47,-25 44.3,-23 43.3,-21.5 44.3,-20.3 46.3,-15.7 48.3,-13.4",
+"-73,78 -62,82 -40,83.5 -20,81.5 -18,77 -22,70 -30,68 -40,65 -43.9,59.8 -50,62 -53.5,66 -55,70 -58,75 -66,76.5","95.3,5.6 98,4 103.5,-0.5 106,-3.2 105.8,-5.8 102.3,-4 99,1.7",
+"109,1.5 113,3.2 116,6.8 119.2,5.3 117.5,-0.5 116,-4 111.5,-3.3 109,-1","105.2,-6.8 108.5,-6.7 112.7,-6.9 114.5,-8.7 108,-7.8","-84.9,21.9 -82,23.2 -77,22 -74.2,20.2 -78,19.9 -82,21.6"];
+var W_WATER=["28,41.2 28.7,43.5 33,45 36,45 41.5,42 41.5,41.5 36,41.7 31,41.2","47,45 51,47 53,44 51,43 53,40 54,37 49,37.5 49.5,40.4 47.5,43"];
+var O=[37.15,-0.72];
+var WD=[
+{rg:'af',n:'Uganda',s:'TT 1.4%',ll:[32.58,0.35]},
+{rg:'me',n:'Saudi Arabia',s:'FB 0.9% · TT <1%',ll:[46.7,24.7],dy:8},{rg:'me',n:'Qatar',s:'TT 1.1%',ll:[51.5,25.3],dy:16},{rg:'me',n:'UAE',s:'TT <1%',ll:[55.3,25.2],dy:28},{rg:'me',n:'Kuwait',s:'TT <1%',ll:[47.98,29.37],dy:-8},
+{rg:'as',n:'Pakistan',s:'FB 1.4%',ll:[67.0,24.86]},{rg:'as',n:'India',s:'TT <1%',ll:[77.2,28.6]},
+{rg:'eu',n:'Germany',s:'TT <1%',ll:[13.4,52.5]},{rg:'eu',n:'Moldova',s:'TT <1%',ll:[28.86,47.0]},
+{rg:'am',n:'United States',s:'FB 0.5%',ll:[-74,40.7]},{rg:'am',n:'Cayman Islands',s:'TT <1%',ll:[-81.38,19.3]}];
+mk({id:'w',svg:'#wMap',tabs:'#wTabs',info:'#wInfo',W:1000,H:430,P:function(a){return[(a[0]+180)*K,(84-a[1])*K]},land:W_LAND,water:W_WATER,o:O,oname:'Kenya · FB 97.2% · TT 92.9%',dests:WD,gb:[-180,180,-60,80],gs:[30,20],sd:70,pad:60,
+R:{all:{name:'All markets',t:'11 countries beyond Kenya',p:'Kenya is 97.2% of the Facebook audience and 92.9% of TikTok. The rest is spread across Africa, the Gulf, South Asia, Europe and the Americas. In August it was about six countries.'},
+af:{name:'Africa',t:'Uganda leads in East Africa',p:'Uganda is the largest TikTok audience outside Kenya (1.4%). Ugandan tea‑factory searches also lead viewers to us.'},
+me:{name:'Middle East',t:'Strongest diaspora cluster',p:'Qatar, Saudi Arabia, UAE and Kuwait: Kenyans working in the Gulf. A natural first market for online orders.'},
+as:{name:'South Asia',t:'Pakistan: a tea‑import market',p:'Pakistan (1.4% of Facebook viewers) is a major buyer of Kenyan tea, which makes this worth noting for export.'},
+eu:{name:'Europe',t:'Germany & Moldova',p:'Small but new audiences, each under 1%.'},
+am:{name:'The Americas',t:'United States & Cayman Islands',p:'Small audiences, under 1%, likely Kenyans living abroad.'}}});
+
+var KO="34.0,4.2 34.4,4.6 35.0,5.0 35.9,4.6 36.9,4.45 38.1,3.6 39.0,3.5 39.8,3.9 41.0,3.95 41.9,3.98 41.0,3.0 41.0,-1.0 41.5,-1.65 40.9,-2.3 40.1,-3.2 39.7,-4.05 39.2,-4.68 37.7,-3.4 36.8,-2.55 35.5,-1.8 34.0,-1.0 33.9,0.1 34.1,0.5 34.5,1.1 34.9,1.6 34.5,2.5 34.4,3.4";
+var KD=[
+{rg:'ce',n:'Maragwa',s:'FB 53.4%',br:13,ll:[37.13,-0.93],dx:2,dy:-6},
+{rg:'ce',n:'Nairobi',s:'FB 22.7% · TT 81.8%',br:15,ll:[36.82,-1.29],dx:-2,dy:14},
+{rg:'ce',n:'Thika',s:'FB 6.8%',br:6,ll:[37.07,-1.03],dx:20,dy:14,hideAll:1},
+{rg:'rv',n:'Kericho',s:'FB 3.4%',br:5,ll:[35.28,-0.37],dy:20},
+{rg:'rv',n:'Nandi',s:'FB 3.4%',br:5,ll:[35.1,0.2],dy:-12},
+{rg:'rv',n:'Nakuru',s:'TT <1%',br:3.5,ll:[36.07,-0.3],dx:10,dy:-20},
+{rg:'we',n:'Kisumu',s:'TT 5.8%',br:6,ll:[34.77,-0.1],dy:2},
+{rg:'co',n:'Malindi',s:'TT 5.6%',br:6,ll:[40.12,-3.22]},
+{rg:'co',n:'Mombasa',s:'TT <1%',br:3.5,ll:[39.67,-4.05]},
+{rg:'no',n:'Loglogo',s:'TT <1%',br:3.5,ll:[37.93,1.98]}];
+mk({id:'k',kenya:1,svg:'#kMap',tabs:'#kTabs',info:'#kInfo',W:880,H:1050,P:function(a){return[(a[0]-33.5)*100,(5.6-a[1])*100]},land:[KO],o:O,oy:-12,oname:"Ikumbi Tea, Murang'a",dests:KD,gb:[34,42,-5,5],gs:[1,1],sd:7,pad:130,
+towns:[['Eldoret',[35.27,0.52]],['Garissa',[39.64,-0.45]],['Lodwar',[35.6,3.12]],['Marsabit',[37.99,2.33]]],
+foot:'Facebook "Other" towns: 10.2% · TikTok "Other" cities: 5.0%.',
+R:{all:{name:'All regions',t:'Central Kenya leads; reach now spans the coast and the west',p:'Maragwa, Nairobi and Thika together make up 82.9% of the Facebook audience. Nairobi is 81.8% of TikTok. Kisumu, Malindi and Mombasa are new since August.'},
+ce:{name:'Central & Nairobi',t:'Home ground and the capital',p:'Maragwa (around the factory) leads Facebook. Nairobi leads TikTok and is the only area strong on both platforms.'},
+rv:{name:'Rift Valley',t:'Tea‑growing areas',p:'Kericho and Nandi (Facebook) are tea areas, where people take a professional interest in us. Nakuru appears on TikTok.'},
+we:{name:'Western',t:'Kisumu: new on TikTok',p:'5.8% of TikTok viewers, the second‑largest TikTok city.'},
+co:{name:'Coast',t:'Malindi & Mombasa: new',p:'Malindi (5.6%) is TikTok’s third‑largest city. Mombasa is under 1%.'},
+no:{name:'Northern',t:'Loglogo (Marsabit)',p:'A small TikTok audience in northern Kenya, under 1%.'}}});
+})();
+
+(function(){
+ function fit(){setTimeout(function(){window.dispatchEvent(new Event('resize'))},60);setTimeout(function(){window.dispatchEvent(new Event('resize'))},350)}
+ function label(g,on){g.querySelector('.gm-fs').innerHTML=on?'<i class="bi bi-x-lg"></i> <span>Close</span>':'<i class="bi bi-arrows-fullscreen"></i> <span>Fullscreen</span>'}
+ function open(g){g.classList.add('gm-full');label(g,true);if(g.requestFullscreen)g.requestFullscreen().catch(function(){});fit()}
+ function close(g){g.classList.remove('gm-full');label(g,false);if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(function(){});fit()}
+ document.addEventListener('click',function(e){var b=e.target.closest('.gm-fs');if(!b)return;e.stopPropagation();var g=b.closest('.gm');g.classList.contains('gm-full')?close(g):open(g)});
+ document.addEventListener('fullscreenchange',function(){if(!document.fullscreenElement)document.querySelectorAll('.gm.gm-full').forEach(close)});
+ document.addEventListener('keydown',function(e){if(e.key==='Escape')document.querySelectorAll('.gm.gm-full').forEach(close)});
+})();
+</script>
+</body>
+</html>
